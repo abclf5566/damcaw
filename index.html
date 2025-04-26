@@ -68,11 +68,59 @@
       font-size: 0.8em;
     }
     /* RWD: 在寬度小於600px 時，每項欄位直向排列 */
-  @media (max-width:600px){
-    .row-flex{flex-direction:column!important;align-items:stretch;}
-    .row-flex>div{width:100%;}
-    .calculator input,.calculator select{width:100%;}
+/* ①　手機排版總開關 */
+@media (max-width:600px){
+
+  /* 1. 外框卡片 － 滿版＋下間距 */
+  .calculator{
+    width: 95vw;          /* 幾乎滿版，兩側留 2.5% 空隙 */
+    margin: 0.5em auto;
+    padding: 0.6em 0.7em;
   }
+
+  /* 2. 每一列直向堆疊 */
+  .row-flex{                     /* 你原本的 flex 容器 */
+    flex-direction: column!important;
+  }
+
+  /* 3. label / input / select 全寬 + 字體放大 */
+  .calculator label{
+    font-size: 0.9em;            /* 更易讀 */
+    width: 100%;
+  }
+  .calculator input,
+  .calculator select{
+    width: 100%;
+    font-size: 1em;
+    padding: 0.4em 0.5em;
+    margin: 0.15em 0 0.4em;
+  }
+
+  /* 4. 深色切換、CET 折扣 checkbox 換行顯示 */
+  .calculator input[type="checkbox"]{
+    transform: scale(1.2);       /* 手指較好點擊 */
+    margin-right: 0.3em;
+  }
+
+  /* 5. 結果區塊：行高拉大、不水平捲動 */
+  #result{
+    font-size: 0.95em;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+
+  /* 6. 新增／刪除按鈕 － 手機友好尺寸 */
+  #addCalculator,
+  .delete-btn{
+    width: 90%;
+    font-size: 1em;
+    padding: 0.55em 0;
+  }
+  .delete-btn{
+    margin-top: 0.7em;
+  }
+}
+
   </style>
 </head>
 <body>
