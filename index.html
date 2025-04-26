@@ -142,7 +142,7 @@
     }
 
     async function fetchDepth(exchange, symbol) {
-      const proxy = 'https://corsproxy.io/?';
+      const proxy = 'https://cors.neon-game.com/';;;
       try {
         if (exchange === 'coinex') {
           const url = `${proxy}https://api.coinex.com/v2/spot/depth?market=${symbol.toUpperCase()}USDT&limit=50&interval=0`;
@@ -370,7 +370,15 @@ addBtn.addEventListener('click', () => {
     });
   }
   updateCloneTokens();
-  exchangeSelect.addEventListener('change', updateCloneTokens);
+  exchangeSelect.addEventListener('change', () => {
+  updateCloneTokens();            // 原本就有的
+  if (symbolInput.value.trim()) { // 代幣不為空才重算
+    if (loop) clearInterval(loop);
+    runScoped();
+    loop = setInterval(runScoped, 1000);
+  }
+});
+
 
   let loop = null;
   symbolInput.addEventListener('input', async () => {
