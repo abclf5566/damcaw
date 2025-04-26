@@ -1,140 +1,152 @@
-
-    :root {
-      --bg: #f0f0f0;
-      --text: #000;
-      --card-bg: #fff;
-    }
-    [data-theme="dark"] {
-      --bg: #121212;
-      --text: #f0f0f0;
-      --card-bg: #1e1e1e;
-    }
-    body {
-      font-family: sans-serif;
-      padding: 0.3em;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.3s, color 0.3s;
-    }
-    input, select, button {
-      padding: 0.25em;
-      margin: 0.05em;
-      background: var(--card-bg);
-      color: var(--text);
-      border: 1px solid #ccc;
-    }
-    #result {
-      white-space: pre-wrap;
-      margin-top: 0.4em;
-    }
-    #error {
-      color: red;
-      margin-top: 1em;
-    }
-
-    .delete-btn {
-      margin-top: 0.4em;
-      background: transparent;
-      color: #e11d48;
-      border: 1px solid #e11d48;
-      padding: 0.15em 0.6em;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.75em;
-      /* display: inline-flex; */
-      align-items: center;
-      gap: 0.3em;
-      transition: background 0.2s, color 0.2s;
-    }
-    .delete-btn:hover {
-      background: #e11d48;
-      color: #fff;
-    }
-    .calculator input,
-    .calculator select {
-      font-size: 0.9em;
-      padding: 0.2em 0.4em;
-      margin: 0.05em 0.15em;
-      border-radius: 4px;
-      min-width: 4.5em;
-    }
-    .calculator label {
-      font-size: 0.8em;
-    }
-    /* RWD: 在寬度小於600px 時，每項欄位直向排列 */
-/* ①　手機排版總開關 */
-@media (max-width:600px){
-
-  /* 1. 外框卡片 － 滿版＋下間距 */
+/* ───────────────────────────────────
+   1. 顏色變數（light / dark）
+   ─────────────────────────────────── */
+   :root{
+    --bg:#f0f0f0;
+    --text:#000;
+    --card:#fff;
+    --border:#ccc;
+    --danger:#e11d48;
+    --primary:#3b82f6;
+  }
+  [data-theme="dark"]{
+    --bg:#121212;
+    --text:#f0f0f0;
+    --card:#1e1e1e;
+    --border:#555;
+  }
+  
+  /* ───────────────────────────────────
+     2. 全域 reset / 基礎
+     ─────────────────────────────────── */
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto;
+    color:var(--text);
+    padding:.3em;
+    transition:background .3s,color .3s;
+  }
+  input,select,button{
+    padding:.25em .4em;
+    margin:0;
+    font:inherit;
+    color:var(--text);
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:4px;
+  }
+  
+  /* ───────────────────────────────────
+     3. 卡片容器
+     ─────────────────────────────────── */
   .calculator{
-    width: 95vw;          /* 幾乎滿版，兩側留 2.5% 空隙 */
-    margin: 0.5em auto;
-    padding: 0.6em 0.7em;
+    max-width:720px;
+    margin:.5em auto;
+    padding:.5em .6em;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 0 4px rgba(0,0,0,.08);
+    display:flex;
+    flex-direction:column;
+    gap:.4em;
   }
-
-  /* 2. 每一列直向堆疊 */
-  .row-flex{                     /* 你原本的 flex 容器 */
-    flex-direction: column!important;
+  
+  /* 標題 */
+  .calculator h2{
+    font-size:1.3em;
+    margin:.1em 0 .2em;
   }
-
-  /* 3. label / input / select 全寬 + 字體放大 */
-  .calculator label{
-    font-size: 0.9em;            /* 更易讀 */
-    width: 100%;
+  
+  /* ───────────────────────────────────
+     4. 表單列（欄位集合）
+     ─────────────────────────────────── */
+  .form-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:.4em;
   }
+  /* 單一欄位包裝 */
+  .form-row>div{margin-bottom:.35em;min-width:120px;flex:1 1 160px;}
+  
+  /* 標籤與控制項 */
+  .calculator label{font-size:.8em;display:block;margin-bottom:.15em;}
   .calculator input,
-  .calculator select{
-    width: 100%;
-    font-size: 1em;
-    padding: 0.4em 0.5em;
-    margin: 0.15em 0 0.4em;
+  .calculator select{width:100%;}
+  
+  /* ────────── Checkbox 列 ────────── */
+  label[for="darkToggle"],
+  label[for="cet"]{
+    display:flex;align-items:center;gap:.45em;font-size:.9em;
+    user-select:none;
   }
-
-  /* 4. 深色切換、CET 折扣 checkbox 換行顯示 */
-  .calculator input[type="checkbox"]{
-    transform: scale(1.2);       /* 手指較好點擊 */
-    margin-right: 0.3em;
+  #darkToggle{
+    accent-color:var(--primary);
+    width:18px;height:18px;cursor:pointer;
   }
-
-  /* 5. 結果區塊：行高拉大、不水平捲動 */
-  #result{
-    font-size: 0.95em;
-    line-height: 1.6;
-    word-break: break-all;
-  }
-
-  /* 6. 新增／刪除按鈕 － 手機友好尺寸 */
+  
+  /* ───────────────────────────────────
+     5. 按鈕
+     ─────────────────────────────────── */
   #addCalculator,
   .delete-btn{
-    width: 90%;
-    font-size: 1em;
-    padding: 0.55em 0;
+    display:block;
+    width:90%;
+    max-width:480px;
+    margin:.6em auto 0;
+    padding:.5em 0;
+    font-size:.9em;
+    text-align:center;
+    border-radius:20px;
+    cursor:pointer;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  #addCalculator{
+    background:var(--primary);
+    color:#fff;
+    border:none;
   }
   .delete-btn{
-    margin-top: 0.7em;
+    background:transparent;
+    color:var(--danger);
+    border:1px solid var(--danger);
   }
-}
-#darkToggle{
-  /* iOS 17+ 原生支援 accent-color 超好用！ */
-  accent-color:#3b82f6;
-  width:18px; height:18px;
-  cursor:pointer;
-}
-label[for="darkToggle"]{
-  display:flex; align-items:center; gap:0.45em;
-  user-select:none;
-  font-size:0.9em;
-}
-
-.form-row{
-  display:flex; flex-wrap:wrap; align-items:center; gap:0.45em;
-}
-@media (max-width:600px){
-  .row-flex{flex-direction:column!important;}
-  .form-row > *{width:100%;}
-}
-#addCalculator{
-  max-width:480px;     /* 桌機不會太寬 */
-  width:90%;
-}
-
+  .delete-btn:hover{background:var(--danger);color:#fff;}
+  
+  /* ───────────────────────────────────
+     6. 結果 / 錯誤顯示
+     ─────────────────────────────────── */
+  #result{
+    font-size:.9em;
+    line-height:1.4;
+    white-space:pre-wrap;
+    margin-top:.3em;
+  }
+  #result b{font-weight:600;}
+  #error{color:var(--danger);margin-top:.8em;}
+  
+  /* ───────────────────────────────────
+     7. 響應式：手機 <600px
+     ─────────────────────────────────── */
+  @media (max-width:600px){
+    .calculator{
+      width:100vw;
+      margin:.4em 0;
+      border-radius:0;          /* 頂到左右邊，看起來更滿 */
+    }
+    .form-row{flex-direction:column;gap:.25em;}
+    .form-row>div{margin-bottom:.25em;flex:1 1 auto;width:100%;}
+    .calculator label{font-size:.9em;}
+    .calculator input,
+    .calculator select{
+      font-size:1em;
+      padding:.45em .5em;
+      margin-top:.1em;
+    }
+    #result{font-size:.95em;}
+    #addCalculator,
+    .delete-btn{font-size:1em;margin-top:.8em;}
+  }
+  
