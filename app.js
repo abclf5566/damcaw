@@ -16,22 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('darkToggle');
   if (!toggle) return;
 
-  // 起始狀態：根據 <html data-theme> 來決定勾勾
+  // 起始狀態：同步 <html data-theme>
   toggle.checked = document.documentElement.dataset.theme === 'dark';
 
   toggle.addEventListener('change', () => {
     const isDark = toggle.checked;
-    if (isDark) {
-      document.documentElement.dataset.theme = 'dark';
-      document.documentElement.style.background = '#121212';
-    } else {
-      document.documentElement.dataset.theme = 'light';
-      document.documentElement.style.background = '';
-    }
-    localStorage.setItem('prefersDark', isDark);
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    localStorage.setItem('prefersDark', isDark);          // <-- 關鍵！寫入
+    document.documentElement.style.background = isDark ? '#121212' : '';
   });
-  
 });
+
 
 
 (() => {
@@ -277,16 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener("DOMContentLoaded", () => {
       /* 深色模式 */
       const darkToggle = $("#darkToggle");
-      if (darkToggle) {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        if (prefersDark) {
-          document.documentElement.dataset.theme = "dark";
-          darkToggle.checked = true;
-        }
-        darkToggle.addEventListener("change", () => {
-          document.documentElement.dataset.theme = darkToggle.checked ? "dark" : "light";
-        });
-      }
   
       /* 建立主 Calculator */
       const calculators = [];

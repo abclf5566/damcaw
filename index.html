@@ -8,20 +8,19 @@
     <style>html[data-theme="dark"]{background:#121212;}</style>
   
     <script>
-      // 讀 localStorage（'true' / 'false' / null）
-      const saved = localStorage.getItem('prefersDark');
-      let useDark;
-      if (saved === 'true')      useDark = true;
-      else if (saved === 'false') useDark = false;
-      else                        useDark = matchMedia('(prefers-color-scheme: dark)').matches;
-
-      // 把結果寫進 <html>
-      if (useDark) {
-        document.documentElement.dataset.theme = 'dark';
-        document.documentElement.style.background = '#121212'; // 預防白閃
-      } else {
-        document.documentElement.dataset.theme = 'light';
-      }
+      // 1. 讀偏好
+      const saved = localStorage.getItem('prefersDark');          // 'true' / 'false' / null
+    
+      // 2. 決定主題（若沒存過偏好，跟隨系統）
+      const useDark = saved === 'true'
+            ? true
+            : saved === 'false'
+            ? false
+            : matchMedia('(prefers-color-scheme: dark)').matches;
+    
+      // 3. 寫進 <html>
+      document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+      if (useDark) document.documentElement.style.background = '#121212';
     </script>
   
     <title>深度買賣計算器</title>
