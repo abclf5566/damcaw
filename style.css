@@ -114,3 +114,27 @@
     margin-top: 0.7em;
   }
 }
+#darkToggle{
+  /* iOS 17+ 原生支援 accent-color 超好用！ */
+  accent-color:#3b82f6;
+  width:18px; height:18px;
+  cursor:pointer;
+}
+label[for="darkToggle"]{
+  display:flex; align-items:center; gap:0.45em;
+  user-select:none;
+  font-size:0.9em;
+}
+
+.form-row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:0.45em;
+}
+@media (max-width:600px){
+  .row-flex{flex-direction:column!important;}
+  .form-row > *{width:100%;}
+}
+#addCalculator{
+  max-width:480px;     /* 桌機不會太寬 */
+  width:90%;
+}
+

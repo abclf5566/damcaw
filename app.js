@@ -11,6 +11,28 @@
  *   4. 介面狀態完整持久化到 localStorage（自動 fallback in‑memory）
  *   5. 嚴格使用 let / const + 立即函式避免全域汙染
  */
+/* ---------- 深色切換 ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('darkToggle');
+  if (!toggle) return;
+
+  // 起始狀態：根據 <html data-theme> 來決定勾勾
+  toggle.checked = document.documentElement.dataset.theme === 'dark';
+
+  toggle.addEventListener('change', () => {
+    const isDark = toggle.checked;
+    if (isDark) {
+      document.documentElement.dataset.theme = 'dark';
+      document.documentElement.style.background = '#121212';
+    } else {
+      document.documentElement.dataset.theme = 'light';
+      document.documentElement.style.background = '';
+    }
+    localStorage.setItem('prefersDark', isDark);
+  });
+  
+});
+
 
 (() => {
     "use strict";

@@ -1,18 +1,39 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8">
-  <title>深度買賣計算器</title>
-  <!-- import CSS 並加入版本 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css?v=20250426">
+  <head>
+    <meta charset="UTF-8">
+    <!-- 告訴瀏覽器支援雙主題 -->
+    <meta name="color-scheme" content="light dark">
+    <!-- 先準備深色背景，避免白屏 -->
+    <style>html[data-theme="dark"]{background:#121212;}</style>
   
-</head>
+    <script>
+      // 讀 localStorage（'true' / 'false' / null）
+      const saved = localStorage.getItem('prefersDark');
+      let useDark;
+      if (saved === 'true')      useDark = true;
+      else if (saved === 'false') useDark = false;
+      else                        useDark = matchMedia('(prefers-color-scheme: dark)').matches;
+
+      // 把結果寫進 <html>
+      if (useDark) {
+        document.documentElement.dataset.theme = 'dark';
+        document.documentElement.style.background = '#121212'; // 預防白閃
+      } else {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
+  
+    <title>深度買賣計算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css?v=20250426">
+  </head>
+  
 <body>
   <div class="calculator" style="max-width: 720px; margin: 0.7em auto; padding: 0.4em 0.6em; background: var(--card-bg); border-radius: 8px; box-shadow: 0 0 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 0.4em;">
   <h2 style="font-size: 1.4em; margin: 0 0 0.15em 0;">📊 深度買賣計算器（CoinEx & Pionex）</h2>
   <label ><input type="checkbox" id="darkToggle"> 🌙 深色模式</label>
-  <div class="row-flex" style="display:flex;flex-wrap:wrap;gap:0.25em;align-items:center;">
+  <div class="row-flex form-row">
   <div style="display: flex; flex-direction: column; gap: 0.25em;">
     <label>交易所:<select id="exchange" onchange="updateTokenOptions()">
       <option value="coinex">CoinEx</option>
