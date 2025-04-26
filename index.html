@@ -1,512 +1,95 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8">
-    <!-- 告訴瀏覽器支援雙主題 -->
-    <meta name="color-scheme" content="light dark">
-    <!-- 先準備深色背景，避免白屏 -->
-    <style>html[data-theme="dark"]{background:#121212;}</style>
-  
-    <script>
-      // 1. 讀偏好
-      const saved = localStorage.getItem('prefersDark');          // 'true' / 'false' / null
-    
-      // 2. 決定主題（若沒存過偏好，跟隨系統）
-      const useDark = saved === 'true'
-            ? true
-            : saved === 'false'
-            ? false
-            : matchMedia('(prefers-color-scheme: dark)').matches;
-    
-      // 3. 寫進 <html>
-      document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
-      if (useDark) document.documentElement.style.background = '#121212';
-    </script>
-  
-    <title>深度買賣計算器</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css?v=20250426">
-  </head>
-  
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>深度買賣計算器</title>
+
+  <!-- 預防白屏 -->
+  <style>html[data-theme="dark"]{background:#121212}</style>
+  <script>
+    /* --- 在頁面尚未渲染前決定主題 --- */
+    const saved   = localStorage.getItem('prefersDark');      // 'true' | 'false' | null
+    const useDark = saved === 'true'
+          ? true
+          : saved === 'false'
+          ? false
+          : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+    if (useDark) document.documentElement.style.background = '#121212';
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=20250426a" />
+</head>
+
 <body>
-  <div class="calculator" style="max-width: 720px; margin: 0.7em auto; padding: 0.4em 0.6em; background: var(--card-bg); border-radius: 8px; box-shadow: 0 0 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 0.4em;">
-  <h2 style="font-size: 1.4em; margin: 0 0 0.15em 0;">📊 深度買賣計算器（CoinEx & Pionex）</h2>
-  <label ><input type="checkbox" id="darkToggle"> 🌙 深色模式</label>
-  <div class="row-flex form-row">
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label>交易所:<select id="exchange" onchange="updateTokenOptions()">
-      <option value="coinex">CoinEx</option>
-      <option value="pionex">Pionex</option>
-    </select></label>
+  <!-- ───────── 主卡片 ───────── -->
+  <div class="calculator">
+    <h2>📊 深度買賣計算器（CoinEx &amp; Pionex）</h2>
+
+    <!-- 深色切換 -->
+    <label for="darkToggle">
+      <input type="checkbox" id="darkToggle" />
+      🌙 深色模式
+    </label>
+
+    <!-- 表單列 -->
+    <div class="form-row">
+      <div>
+        <label>交易所:
+          <select id="exchange">
+            <option value="coinex">CoinEx</option>
+            <option value="pionex">Pionex</option>
+          </select>
+        </label>
+      </div>
+
+      <div>
+        <label>代幣:
+          <input id="symbol" list="symbolList" autocomplete="on" />
+        </label>
+        <datalist id="symbolList"></datalist>
+      </div>
+
+      <div>
+        <label>金額/數量:
+          <input id="amount" type="number" value="1000" />
+        </label>
+      </div>
+
+      <div>
+        <label>操作:
+          <select id="action">
+            <option value="buy">買入</option>
+            <option value="sell">賣出</option>
+          </select>
+        </label>
+      </div>
+
+      <div>
+        <label>手續費(%):
+          <input id="fee" type="number" value="0.1" />
+        </label>
+      </div>
+
+      <div>
+        <label for="cet">
+          <input type="checkbox" id="cet" />
+          CET 折扣
+        </label>
+      </div>
+    </div>
+
+    <!-- 計算結果 -->
+    <div id="result"></div>
+    <div id="error"></div>
   </div>
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label>代幣:<input id="symbol" list="symbolList" autocomplete="on"></label>
-    <datalist id="symbolList"></datalist>
-  </div>
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label>金額/數量:<input id="amount" type="number" value="1000"></label>
-  </div>
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label>操作:<select id="action">
-      <option value="buy">買入</option>
-      <option value="sell">賣出</option>
-    </select></label>
-  </div>
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label>手續費(%):<input id="fee" type="number" value="0.1"></label>
-  </div>
-  <div style="display: flex; flex-direction: column; gap: 0.25em;">
-    <label><input type="checkbox" id="cet"> CET 折扣</label>
-  </div>
-</div>
 
-  <div style="padding:0.4em 0.6em; font-size:0.95em;">
-    <div id="result" style="white-space: pre-wrap;"></div>
-    <div id="error" style="color: #f87171; font-weight: bold; margin-top: 0.5em; min-height: 1.5em;"></div>
-  </div>
+  <!-- 新增計算器按鈕 -->
+  <button id="addCalculator">➕ 新增計算器</button>
 
-  <!-- <script>
-    const tokenList = {
-      coinex: ['KASPER', 'KASPY', 'KDAO', 'GHOAD', 'BURT', 'KEIRO', 'KANGO', 'NACHO', 'KREX', 'KEKE', 'BTC', 'ETH', 'SOL', 'KAS'],
-      pionex: ['GHOAD', 'KANGO', 'NACHO', 'KAS', 'BTC', 'ETH', 'SOL']
-    };
-    
-
-    let loopId = null;
-
-    function updateTokenOptions() {
-      const exchange = document.getElementById('exchange').value;
-      const symbolList = document.getElementById('symbolList');
-      const feeInput = document.getElementById('fee');
-
-      // 根據選擇的交易所設定預設手續費
-      if (exchange === 'coinex') {
-        feeInput.value = '0.3';
-      } else if (exchange === 'pionex') {
-        feeInput.value = '0.1';
-      }
-
-      symbolList.innerHTML = '';
-      const uniqueTokens = [...new Set(tokenList[exchange])];
-      uniqueTokens.forEach(token => {
-        const option = document.createElement('option');
-        option.value = token;
-        symbolList.appendChild(option);
-      });
-    }
-
-    async function fetchDepth(exchange, symbol) {
-      const proxy = 'https://cors.neon-game.com/';;;
-      try {
-        if (exchange === 'coinex') {
-          const url = `${proxy}https://api.coinex.com/v2/spot/depth?market=${symbol.toUpperCase()}USDT&limit=50&interval=0`;
-          const res = await fetch(url);
-          const json = await res.json();
-    console.log("[DEBUG] CoinEx Response:", json);
-console.log("[DEBUG] CoinEx URL:", url);
-          const depth = json?.data?.depth ?? {};
-          if (!depth.asks || !depth.bids || !Array.isArray(depth.asks) || !Array.isArray(depth.bids)) {
-            throw new Error("CoinEx 回傳資料格式錯誤");
-          }
-          return depth;
-        } else {
-          const url = `${proxy}https://api.pionex.com/api/v1/market/depth?symbol=${symbol.toUpperCase()}_USDT&limit=500`;
-          const res = await fetch(url);
-          const json = await res.json();
-    console.log("[DEBUG] Pionex Response:", json);
-          if (!json?.result || !json?.data || !Array.isArray(json.data.asks) || !Array.isArray(json.data.bids) || json.data.asks.length === 0 || json.data.bids.length === 0) {
-            throw new Error("Pionex API 回傳空或無效深度資料（可能為無效市場）");
-          }
-          return json.data;
-        }
-      } catch (err) {
-        throw new Error("取得深度資料失敗：" + err.message);
-      }
-        }
-
-
-    function calculateCoinex(depth, action, amount, feeRate, cetDiscount) {
-      const asks = depth.asks;
-      const bids = depth.bids;
-      if (!asks || !bids) return [0, 0, 0];
-      const book = action === 'buy' ? asks : bids;
-
-      let remaining = amount;
-      let total = 0, weightedSum = 0, totalVol = 0;
-      for (const [priceStr, volStr] of book) {
-        const price = parseFloat(priceStr), volume = parseFloat(volStr);
-        const cost = action === 'buy' ? price * volume : volume;
-        if (remaining >= cost) {
-          total += action === 'buy' ? volume : price * volume;
-          remaining -= cost;
-          weightedSum += price * volume;
-          totalVol += volume;
-        } else {
-          const partial = action === 'buy' ? remaining / price : remaining;
-          total += action === 'buy' ? partial : price * partial;
-          weightedSum += price * partial;
-          totalVol += partial;
-          break;
-        }
-      }
-      if (totalVol === 0) return [0, 0, 0];
-      const avgPrice = weightedSum / totalVol, bestPrice = parseFloat(book[0][0]);
-      const slippage = action === 'buy' ? ((avgPrice - bestPrice) / bestPrice) * 100 : ((bestPrice - avgPrice) / bestPrice) * 100;
-      const fee = total * (cetDiscount ? feeRate * 0.8 : feeRate);
-      return [total - fee, slippage, fee];
-    }
-
-    function calculatePionex(depth, action, amount, feeRate, cetDiscount) {
-      const asks = depth.asks;
-      const bids = depth.bids;
-      if (!asks || !bids) return [0, 0, 0];
-      const book = action === 'buy' ? asks : bids;
-
-      let remaining = amount;
-      let total = 0, weightedSum = 0, totalVol = 0;
-      for (const [priceStr, volStr] of book) {
-        const price = parseFloat(priceStr), volume = parseFloat(volStr);
-        const cost = price * volume;
-        if (action === 'buy') {
-          if (remaining >= cost) {
-            total += volume;
-            remaining -= cost;
-            weightedSum += price * volume;
-            totalVol += volume;
-          } else {
-            const partial = remaining / price;
-            total += partial;
-            weightedSum += price * partial;
-            totalVol += partial;
-            break;
-          }
-        } else {
-          if (remaining >= volume) {
-            total += price * volume;
-            remaining -= volume;
-            weightedSum += price * volume;
-            totalVol += volume;
-          } else {
-            total += price * remaining;
-            weightedSum += price * remaining;
-            totalVol += remaining;
-            break;
-          }
-        }
-      }
-      if (totalVol === 0) return [0, 0, 0];
-      const avgPrice = weightedSum / totalVol, bestPrice = parseFloat(book[0][0]);
-      const slippage = action === 'buy' ? ((avgPrice - bestPrice) / bestPrice) * 100 : ((bestPrice - avgPrice) / bestPrice) * 100;
-      const fee = total * (cetDiscount ? feeRate * 0.8 : feeRate);
-      return [total - fee, slippage, fee];
-    }
-
-    async function run() {
-      const exchange = document.getElementById('exchange').value;
-      const symbol = document.getElementById('symbol').value.trim();
-      const resultDiv = document.getElementById('result');
-      const errorDiv = document.getElementById('error');
-
-      // 若代幣為空，停止更新並清空結果
-      if (!symbol) {
-        if (loopId) clearInterval(loopId);
-        errorDiv.textContent = '';
-        resultDiv.innerHTML = '';
-        return;
-      }
-
-      const amount = parseFloat(document.getElementById('amount').value);
-      const action = document.getElementById('action').value;
-      const feeRate = parseFloat(document.getElementById('fee').value) / 100;
-      const cet = document.getElementById('cet').checked;
-
-      try {
-        const depth = await fetchDepth(exchange, symbol);
-        const [net, slip, fee] = exchange === 'coinex'
-          ? calculateCoinex(depth, action, amount, feeRate, cet)
-          : calculatePionex(depth, action, amount, feeRate, cet);
-
-        const slipColor = slip > 10 ? 'red' : slip > 5 ? 'orange' : 'inherit';
-        const display = `💰 淨獲得數量：${net.toFixed(4)} ${action === 'buy' ? symbol.toUpperCase() : 'USDT'}
-💸 手續費：${fee.toFixed(4)} ${action === 'buy' ? symbol.toUpperCase() : 'USDT'}
-📉 滑點：<span style="color: ${slipColor}; font-weight: bold">${slip.toFixed(2)}%</span>`;
-        resultDiv.innerHTML = display;
-        errorDiv.textContent = '';
-      } catch (err) {
-        errorDiv.textContent = "❌ 錯誤：「" + err.message + "」";
-      }
-    }
-
-    updateTokenOptions();
-
-    // 深色模式初始化 + 切換功能
-    const darkToggle = document.getElementById('darkToggle');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      darkToggle.checked = true;
-    }
-    darkToggle.addEventListener('change', () => {
-      document.documentElement.setAttribute('data-theme', darkToggle.checked ? 'dark' : 'light');
-    });
-
-    // 當 symbol 有變化時自動執行計算
-    document.getElementById('symbol').addEventListener('input', () => {
-      const symbol = document.getElementById('symbol').value.trim();
-      if (symbol !== '') {
-        if (loopId) clearInterval(loopId);
-        run();
-        loopId = setInterval(run, 1000);
-      }
-    });
-  </script> -->
-  <!-- <script type="module" src="function.js?v=20250526"></script> -->
-</div>
-<button id="addCalculator" style="margin: 2em auto 0; display: block; padding: 0.5em 1em; font-size: 1em; background: var(--primary, #3b82f6); color: white; border: none; border-radius: 6px; cursor: pointer;">➕ 新增計算器</button>
-
-<!-- <script>
-let calculatorCount = 1;
-const MAX_CALCULATORS = 10;
-
-const baseCalculator = document.querySelector('div[style*="max-width: 720px"]');
-const addBtn = document.getElementById('addCalculator');
-
-addBtn.addEventListener('click', () => {
-  if (calculatorCount >= MAX_CALCULATORS) return alert("最多只能新增 10 個計算器");
-
-  const clone = baseCalculator.cloneNode(true);
-  calculatorCount++;
-
-  // 移除標題和深色切換
-  const title = clone.querySelector('h2');
-  if (title) title.remove();
-  const darkToggle = clone.querySelector('#darkToggle')?.parentElement;
-  if (darkToggle) darkToggle.remove();
-
-  // 清空輸入與結果
-  clone.querySelectorAll('input').forEach(input => {
-    if (input.type === 'number') input.value = '1000';
-    if (input.type === 'checkbox') input.checked = false;
-    if (input.id.startsWith('symbol')) input.value = '';
-  });
-  clone.querySelector('#result').textContent = '';
-  clone.querySelector('#error').textContent = '';
-
-  // 更新 clone 中所有 id 為唯一值，避免衝突
-  const newIdSuffix = `_${calculatorCount}`;
-  const symbolInput = clone.querySelector('[id^="symbol"]');
-  clone.querySelectorAll('[id]').forEach(el => {
-    const oldId = el.id;
-    // 重新命名所有 id（包含 datalist）以避免衝突
-    const newId = oldId + newIdSuffix;
-    el.id = newId;
-    if (el.tagName === 'LABEL') el.setAttribute('for', newId);
-  });
-  // 讓 symbol input 指向對應 datalist
-  const dl = clone.querySelector('datalist');
-  if (dl && symbolInput) symbolInput.setAttribute('list', dl.id);
-
-    // 綁定自動更新計算功能
-  // symbolInput 已在前面宣告
-  const exchangeSelect = clone.querySelector(`[id^="exchange"]`);
-  const feeInput = clone.querySelector(`[id^="fee"]`);
-  const resultDiv = clone.querySelector(`[id^="result"]`);
-  const errorDiv = clone.querySelector(`[id^="error"]`);
-
-  function updateCloneTokens() {
-    const selEx = exchangeSelect.value.toLowerCase();
-    feeInput.value = selEx === 'coinex' ? '0.3' : '0.1';
-    const dl = clone.querySelector('datalist');
-    dl.innerHTML = '';
-    (tokenList[selEx] || []).forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t;
-      dl.appendChild(opt);
-    });
-  }
-  updateCloneTokens();
-  exchangeSelect.addEventListener('change', () => {
-  updateCloneTokens();            // 原本就有的
-  if (symbolInput.value.trim()) { // 代幣不為空才重算
-    if (loop) clearInterval(loop);
-    runScoped();
-    loop = setInterval(runScoped, 1000);
-  }
-});
-
-
-  let loop = null;
-  symbolInput.addEventListener('input', async () => {
-    const symbol = symbolInput.value.trim();
-    if (symbol !== '') {
-      if (loop) clearInterval(loop);
-      const runScoped = async () => {
-        try {
-          const exchange = exchangeSelect.value;
-          const amount = parseFloat(clone.querySelector(`[id^="amount"]`).value);
-          const action = clone.querySelector(`[id^="action"]`).value;
-          const feeRate = parseFloat(clone.querySelector(`[id^="fee"]`).value) / 100;
-          const cet = clone.querySelector(`[id^="cet"]`).checked;
-
-          const depth = await fetchDepth(exchange, symbol);
-          const [net, slip, fee] = exchange === 'coinex'
-            ? calculateCoinex(depth, action, amount, feeRate, cet)
-            : calculatePionex(depth, action, amount, feeRate, cet);
-
-          const slipColor = slip > 10 ? 'red' : slip > 5 ? 'orange' : 'inherit';
-          const display = `💰 淨獲得數量：${net.toFixed(4)} ${action === 'buy' ? symbol.toUpperCase() : 'USDT'}
-💸 手續費：${fee.toFixed(4)} ${action === 'buy' ? symbol.toUpperCase() : 'USDT'}
-📉 滑點：<span style='color: ${slipColor}; font-weight: bold'>${slip.toFixed(2)}%</span>`;
-          resultDiv.innerHTML = display;
-          errorDiv.textContent = '';
-        } catch (err) {
-          errorDiv.textContent = '❌ 錯誤：「' + err.message + '」';
-        }
-      };
-      await runScoped();
-      loop = setInterval(runScoped, 1000);
-    }
-  });
-
-  // 加入刪除按鈕
-  const delBtn = document.createElement('button');
-  delBtn.textContent = '🗑️ 刪除';
-  delBtn.className = 'delete-btn';
-  delBtn.onclick = () => {
-    if (loop) clearInterval(loop);
-    clone.remove();
-    calculatorCount--;
-  };
-  clone.appendChild(delBtn);
-
-  document.body.insertBefore(clone, addBtn);
-});
-</script> -->
-
-<!-- <script>
-  // ========= 本段為狀態持久化 =========
-  const STORAGE_KEY = 'calc_state_v1';
-  /* ---- 0. 輕量儲存封裝 ---- */
-  const StorageSafe = (() => {
-    let inMemory = null;                 // 後備記憶體
-    const key = 'calc_state_v1';
-
-    function get(){
-      try{
-        return localStorage.getItem(key);
-      }catch(e){
-        return inMemory;
-      }
-    }
-    function set(val){
-      try{
-        localStorage.setItem(key, val);
-      }catch(e){
-        inMemory = val;                  // fallback
-      }
-    }
-    function remove(){
-      try{ localStorage.removeItem(key);} catch(e){ inMemory = null; }
-    }
-    return {get,set,remove};
-  })();  
-
-  // 收集目前所有計算器狀態並存入 localStorage
-  function saveState(){
-    const cards = document.querySelectorAll('.calculator');
-    const list = [];
-    cards.forEach(card=>{
-       const get = sel=>card.querySelector(sel);
-       list.push({
-          exchange: get('[id^="exchange"]').value,
-          symbol:   get('[id^="symbol"]').value,
-          amount:   get('[id^="amount"]').value,
-          action:   get('[id^="action"]').value,
-          fee:      get('[id^="fee"]').value,
-          cet:      get('[id^="cet"]').checked
-       });
-    });
-    const dark = document.documentElement.getAttribute('data-theme')==='dark';
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({cards:list,dark}));
-    StorageSafe.set(JSON.stringify({cards:list,dark}));
-  }
-  
-  // 讀取 localStorage 恢復 UI
-  function restoreState(){
-    const raw = StorageSafe.get();
-  if(!raw) return;
-    try{
-       const {cards,dark}=JSON.parse(raw);
-       if(dark){document.documentElement.setAttribute('data-theme','dark');document.getElementById('darkToggle').checked=true;}
-       if(Array.isArray(cards)&&cards.length){
-          // 第一張覆寫主卡
-          fillCard(document.querySelector('.calculator'), cards[0]);
-          // 其餘用 add 按鈕產生
-          for(let i=1;i<cards.length;i++){
-             const card = addCalculatorProgrammatically();
-             fillCard(card, cards[i]);
-          }
-       }
-    }catch(e){console.warn('restore fail',e);}
-  }
-  
-  // 把資料寫回卡片
-  function fillCard(card, data) {
-  const set = (sel, v) => {
-    const el = card.querySelector(sel);
-    if (el) el.value = v;
-  };
-
-  // ===== 1. 寫入所有欄位 =====
-  set('[id^="exchange"]', data.exchange);
-
-  // 主卡用全域 updateTokenOptions()，clone 另外有 updateCloneTokens()
-  if (card === document.querySelector('.calculator')) {
-    updateTokenOptions();
-  } else {
-    // 這裡的 updateCloneTokens 已在 addCalculator 內宣告
-    card.updateCloneTokens && card.updateCloneTokens();
-  }
-
-  set('[id^="symbol"]',  data.symbol);
-  set('[id^="amount"]',  data.amount);
-  set('[id^="action"]',  data.action);
-  set('[id^="fee"]',     data.fee);
-  const cet = card.querySelector('[id^="cet"]');
-  if (cet) cet.checked = data.cet;
-
-  // ===== 2. 全部寫完再觸發一次計算 =====
-  if (data.symbol) {
-    if (card === document.querySelector('.calculator')) {
-      // 主卡：run() + loopId
-      run();
-      if (loopId) clearInterval(loopId);
-      loopId = setInterval(run, 1000);
-    } else {
-      // clone 卡：用 dispatch 觸發它原本的 listener → runScoped()
-      const evt = new Event('input', { bubbles: true });
-      card.querySelector('[id^="symbol"]').dispatchEvent(evt);
-    }
-  }
-}
-
-  
-  // 包裝原本 add 按鈕行為，使程式化呼叫也能用
-  function addCalculatorProgrammatically(){
-     addBtn.click();
-     return document.body.querySelectorAll('.calculator')[document.body.querySelectorAll('.calculator').length-1];
-  }
-  
-  // 在所有輸入變動、刪除、新增後呼叫 saveState
-  const observeChange = new MutationObserver(saveState);
-  observeChange.observe(document.body,{subtree:true,childList:true});
-  
-  document.body.addEventListener('input', e=>{ if(e.target.matches('input,select')) saveState(); });
-  document.body.addEventListener('change', e=>{ if(e.target.matches('input,select')) saveState(); });
-  
-  window.addEventListener('DOMContentLoaded', restoreState);
-  // ========= 持久化結束 =========
-  </script> -->
-<script type="module" src="app.js?v=20250526"></script>
+  <!-- 功能腳本 -->
+  <script type="module" src="app.js?v=20250526a"></script>
 </body>
 </html>
