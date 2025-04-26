@@ -165,6 +165,7 @@
       coinex: ['KASPER', 'KASPY', 'KDAO', 'GHOAD', 'BURT', 'KEIRO', 'KANGO', 'NACHO', 'KREX', 'KEKE', 'BTC', 'ETH', 'SOL', 'KAS'],
       pionex: ['GHOAD', 'KANGO', 'NACHO', 'KAS', 'BTC', 'ETH', 'SOL']
     };
+    
 
     let loopId = null;
 
@@ -204,7 +205,7 @@ console.log("[DEBUG] CoinEx URL:", url);
           }
           return depth;
         } else {
-          const url = `${proxy}https://api.pionex.com/api/v1/market/depth?symbol=${symbol.toUpperCase()}_USDT&limit=50`;
+          const url = `${proxy}https://api.pionex.com/api/v1/market/depth?symbol=${symbol.toUpperCase()}_USDT&limit=500`;
           const res = await fetch(url);
           const json = await res.json();
     console.log("[DEBUG] Pionex Response:", json);
@@ -475,5 +476,105 @@ addBtn.addEventListener('click', () => {
   document.body.insertBefore(clone, addBtn);
 });
 </script>
+
+<script>
+  // ========= 本段為狀態持久化 =========
+  const STORAGE_KEY = 'calc_state_v1';
+  
+  // 收集目前所有計算器狀態並存入 localStorage
+  function saveState(){
+    const cards = document.querySelectorAll('.calculator');
+    const list = [];
+    cards.forEach(card=>{
+       const get = sel=>card.querySelector(sel);
+       list.push({
+          exchange: get('[id^="exchange"]').value,
+          symbol:   get('[id^="symbol"]').value,
+          amount:   get('[id^="amount"]').value,
+          action:   get('[id^="action"]').value,
+          fee:      get('[id^="fee"]').value,
+          cet:      get('[id^="cet"]').checked
+       });
+    });
+    const dark = document.documentElement.getAttribute('data-theme')==='dark';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({cards:list,dark}));
+  }
+  
+  // 讀取 localStorage 恢復 UI
+  function restoreState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    try{
+       const {cards,dark}=JSON.parse(raw);
+       if(dark){document.documentElement.setAttribute('data-theme','dark');document.getElementById('darkToggle').checked=true;}
+       if(Array.isArray(cards)&&cards.length){
+          // 第一張覆寫主卡
+          fillCard(document.querySelector('.calculator'), cards[0]);
+          // 其餘用 add 按鈕產生
+          for(let i=1;i<cards.length;i++){
+             const card = addCalculatorProgrammatically();
+             fillCard(card, cards[i]);
+          }
+       }
+    }catch(e){console.warn('restore fail',e);}
+  }
+  
+  // 把資料寫回卡片
+  function fillCard(card, data) {
+  const set = (sel, v) => {
+    const el = card.querySelector(sel);
+    if (el) el.value = v;
+  };
+
+  // ===== 1. 寫入所有欄位 =====
+  set('[id^="exchange"]', data.exchange);
+
+  // 主卡用全域 updateTokenOptions()，clone 另外有 updateCloneTokens()
+  if (card === document.querySelector('.calculator')) {
+    updateTokenOptions();
+  } else {
+    // 這裡的 updateCloneTokens 已在 addCalculator 內宣告
+    card.updateCloneTokens && card.updateCloneTokens();
+  }
+
+  set('[id^="symbol"]',  data.symbol);
+  set('[id^="amount"]',  data.amount);
+  set('[id^="action"]',  data.action);
+  set('[id^="fee"]',     data.fee);
+  const cet = card.querySelector('[id^="cet"]');
+  if (cet) cet.checked = data.cet;
+
+  // ===== 2. 全部寫完再觸發一次計算 =====
+  if (data.symbol) {
+    if (card === document.querySelector('.calculator')) {
+      // 主卡：run() + loopId
+      run();
+      if (loopId) clearInterval(loopId);
+      loopId = setInterval(run, 1000);
+    } else {
+      // clone 卡：用 dispatch 觸發它原本的 listener → runScoped()
+      const evt = new Event('input', { bubbles: true });
+      card.querySelector('[id^="symbol"]').dispatchEvent(evt);
+    }
+  }
+}
+
+  
+  // 包裝原本 add 按鈕行為，使程式化呼叫也能用
+  function addCalculatorProgrammatically(){
+     addBtn.click();
+     return document.body.querySelectorAll('.calculator')[document.body.querySelectorAll('.calculator').length-1];
+  }
+  
+  // 在所有輸入變動、刪除、新增後呼叫 saveState
+  const observeChange = new MutationObserver(saveState);
+  observeChange.observe(document.body,{subtree:true,childList:true});
+  
+  document.body.addEventListener('input', e=>{ if(e.target.matches('input,select')) saveState(); });
+  document.body.addEventListener('change', e=>{ if(e.target.matches('input,select')) saveState(); });
+  
+  window.addEventListener('DOMContentLoaded', restoreState);
+  // ========= 持久化結束 =========
+  </script>
 </body>
 </html>
