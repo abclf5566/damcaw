@@ -42,15 +42,11 @@
      3. 卡片容器
      ─────────────────────────────────── */
   .calculator{
-    max-width:720px;
-    margin:.5em auto;
-    padding:.5em .6em;
     background:var(--card);
     border-radius:12px;
     box-shadow:0 0 4px rgba(0,0,0,.08);
-    display:flex;
-    flex-direction:column;
-    gap:.4em;
+    padding:.6em .7em;
+    margin:.5em auto;
   }
   
   /* 標題 */
@@ -85,12 +81,29 @@
   #darkToggle{
     accent-color:var(--primary);
     width:18px;height:18px;cursor:pointer;
+    justify-content:center;
   }
   
   /* ───────────────────────────────────
      5. 按鈕
      ─────────────────────────────────── */
   #addCalculator,
+  .row-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* checkbox和文字之間留點空 */
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .row-checkbox input[type="checkbox"] {
+    width: 22px;
+    cursor: pointer;
+  }
+  
   .delete-btn{
     display:block;
     width:90%;
@@ -130,23 +143,9 @@
   /* ───────────────────────────────────
      7. 響應式：手機 <600px
      ─────────────────────────────────── */
-  @media (max-width:600px){
-    .calculator{
-      width:100vw;
-      margin:.4em 0;
-      border-radius:0;          /* 頂到左右邊，看起來更滿 */
-    }
-    .form-row{flex-direction:column;gap:.25em;}
-    .form-row>div{margin-bottom:.25em;flex:1 1 auto;width:100%;}
-    .calculator label{font-size:.9em;}
-    .calculator input,
-    .calculator select{
-      font-size:1em;
-      padding:.45em .5em;
-      margin-top:.1em;
-    }
-    #result{font-size:.95em;}
-    #addCalculator,
-    .delete-btn{font-size:1em;margin-top:.8em;}
+  @media (max-width:599px){
+  .form-row{flex-wrap:wrap;gap:.35em;}
+  .form-row>div{flex:1 1 calc(50% - .4em);}   /* 兩欄 */
+  .form-row>div.long{flex:1 1 100%;}          /* 想要整列才加 class="long" */
   }
   
