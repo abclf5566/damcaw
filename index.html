@@ -1,95 +1,756 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <title>深度買賣計算器</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>深度交易計算器</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg-light: #f8fafc;
+      --bg-dark: #0f172a;
+      --card-light: #ffffff;
+      --card-dark: #1e293b;
+      --text-light: #1e293b;
+      --text-dark: #f1f5f9;
+      --border-light: #e2e8f0;
+      --border-dark: #334155;
+      --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-dark: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
 
-  <!-- 預防白屏 -->
-  <style>html[data-theme="dark"]{background:#121212}</style>
-  <script>
-    /* --- 在頁面尚未渲染前決定主題 --- */
-    const saved   = localStorage.getItem('prefersDark');      // 'true' | 'false' | null
-    const useDark = saved === 'true'
-          ? true
-          : saved === 'false'
-          ? false
-          : matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
-    if (useDark) document.documentElement.style.background = '#121212';
-  </script>
+    [data-theme="light"] {
+      --bg: var(--bg-light);
+      --card: var(--card-light);
+      --text: var(--text-light);
+      --border: var(--border-light);
+      --shadow: var(--shadow-light);
+    }
 
-  <link rel="stylesheet" href="style.css?v=20250426b" />
+    [data-theme="dark"] {
+      --bg: var(--bg-dark);
+      --card: var(--card-dark);
+      --text: var(--text-dark);
+      --border: var(--border-dark);
+      --shadow: var(--shadow-dark);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: clamp(14px, 2vw, 16px);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: all 0.3s ease;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      background: var(--gradient);
+      border: none;
+      border-radius: 50%;
+      width: 3rem;
+      height: 3rem;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-top: 4rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      opacity: 0.7;
+      font-size: 1.1rem;
+    }
+
+    .calculators-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .calculator {
+      background: var(--card);
+      border-radius: 1rem;
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .calculator::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient);
+    }
+
+    .calculator:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      opacity: 0.8;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 0.6rem;
+      border: 2px solid var(--border);
+      border-radius: 0.5rem;
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 1.2rem;
+      height: 1.2rem;
+      accent-color: var(--primary);
+    }
+
+    .result-section {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background: rgba(99, 102, 241, 0.05);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .result-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .slippage-low { color: var(--success); }
+    .slippage-medium { color: var(--warning); }
+    .slippage-high { color: var(--danger); }
+
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .status-loading { 
+      background: var(--warning);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-success { background: var(--success); }
+    .status-error { background: var(--danger); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .add-calculator {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      background: var(--gradient);
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .add-calculator:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 1rem;
+      right: 3rem;
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 1.2rem;
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .calculators-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .calculator {
+        padding: 1rem;
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+      }
+
+      .theme-toggle {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0.5rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+      }
+    }
+  </style>
 </head>
+<body data-theme="light">
+  <button class="theme-toggle" id="themeToggle">🌙</button>
 
-<body>
-  <!-- ───────── 主卡片 ───────── -->
-  <div class="calculator">
-    <h2>📊 深度買賣計算器（CoinEx &amp; Pionex）</h2>
+  <div class="container">
+    <header class="header">
+      <h1>📊 深度交易計算器</h1>
+      <p>實時計算 CoinEx & Pionex 交易滑點與手續費</p>
+    </header>
 
-    <!-- 深色切換 -->
-    <label for="darkToggle">
-      <input type="checkbox" id="darkToggle" />
-      🌙 深色模式
-    </label>
+    <div class="calculators-grid" id="calculatorsGrid">
+      <div class="calculator" data-calculator="0">
+        <div class="status-indicator" id="status-0"></div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>交易所</label>
+            <select id="exchange-0">
+              <option value="coinex">CoinEx</option>
+              <option value="pionex">Pionex</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>代幣</label>
+            <input id="symbol-0" list="tokens-0" placeholder="輸入代幣符號">
+            <datalist id="tokens-0"></datalist>
+          </div>
+          
+          <div class="form-group">
+            <label>金額 (USDT)</label>
+            <input id="amount-0" type="number" value="1000" min="0" step="0.01">
+          </div>
+          
+          <div class="form-group">
+            <label>操作</label>
+            <select id="action-0">
+              <option value="buy">買入</option>
+              <option value="sell">賣出</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>手續費 (%)</label>
+            <input id="fee-0" type="number" value="0.1" min="0" max="10" step="0.01">
+          </div>
+        </div>
 
-    <!-- 表單列 -->
-    <div class="form-row">
-      <div>
-        <label>交易所:
-          <select id="exchange">
-            <option value="coinex">CoinEx</option>
-            <option value="pionex">Pionex</option>
-          </select>
-        </label>
-      </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="cet-0">
+          <label for="cet-0">CET 8折優惠</label>
+        </div>
 
-      <div>
-        <label>代幣:
-          <input id="symbol" list="symbolList" autocomplete="on" />
-        </label>
-        <datalist id="symbolList"></datalist>
-      </div>
-
-      <div>
-        <label>金額/數量:
-          <input id="amount" type="number" value="1000" />
-        </label>
-      </div>
-
-      <div>
-        <label>操作:
-          <select id="action">
-            <option value="buy">買入</option>
-            <option value="sell">賣出</option>
-          </select>
-        </label>
-      </div>
-
-      <div>
-        <label>手續費(%):
-          <input id="fee" type="number" value="0.1" />
-        </label>
-      </div>
-
-      <div>
-        <label class="row-checkbox long">
-          <input type="checkbox" id="cet" />
-          CET 折扣
-        </label>
+        <div class="result-section" id="result-0" style="display: none;"></div>
+        <div class="error" id="error-0" style="display: none;"></div>
       </div>
     </div>
 
-    <!-- 計算結果 -->
-    <div id="result"></div>
-    <div id="error"></div>
+    <button class="add-calculator" id="addCalculator">➕ 新增計算器</button>
   </div>
 
-  <!-- 新增計算器按鈕 -->
-  <button id="addCalculator">➕ 新增計算器</button>
+  <script>
+    class ModernTradingCalculator {
+      constructor() {
+        this.calculators = [];
+        this.maxCalculators = 8;
+        this.proxyUrl = 'https://cors.neon-game.com/';
+        this.tokens = {
+          coinex: ['KASPER','KASPY','KDAO','GHOAD','BURT','KEIRO','KANGO','NACHO','KREX','KEKE','BTC','ETH','SOL','KAS'],
+          pionex: ['GHOAD','KANGO','NACHO','KAS','BTC','ETH','SOL']
+        };
+        
+        this.init();
+      }
 
-  <!-- 功能腳本 -->
-  <script type="module" src="app.js?v=20250426b"></script>
+      init() {
+        this.initTheme();
+        this.createCalculator(0);
+        this.bindGlobalEvents();
+      }
+
+      initTheme() {
+        const saved = localStorage.getItem('theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+
+      toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('theme', newTheme);
+      }
+
+      createCalculator(id) {
+        if (id === 0) {
+          this.calculators.push(new Calculator(id, this));
+          return;
+        }
+
+        const grid = document.getElementById('calculatorsGrid');
+        const template = this.getCalculatorTemplate(id);
+        grid.insertAdjacentHTML('beforeend', template);
+        this.calculators.push(new Calculator(id, this));
+      }
+
+      getCalculatorTemplate(id) {
+        return `
+          <div class="calculator" data-calculator="${id}">
+            <div class="status-indicator" id="status-${id}"></div>
+            <button class="delete-btn" onclick="app.removeCalculator(${id})">🗑️</button>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label>交易所</label>
+                <select id="exchange-${id}">
+                  <option value="coinex">CoinEx</option>
+                  <option value="pionex">Pionex</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>代幣</label>
+                <input id="symbol-${id}" list="tokens-${id}" placeholder="輸入代幣符號">
+                <datalist id="tokens-${id}"></datalist>
+              </div>
+              
+              <div class="form-group">
+                <label>金額 (USDT)</label>
+                <input id="amount-${id}" type="number" value="1000" min="0" step="0.01">
+              </div>
+              
+              <div class="form-group">
+                <label>操作</label>
+                <select id="action-${id}">
+                  <option value="buy">買入</option>
+                  <option value="sell">賣出</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>手續費 (%)</label>
+                <input id="fee-${id}" type="number" value="0.1" min="0" max="10" step="0.01">
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="cet-${id}">
+              <label for="cet-${id}">CET 8折優惠</label>
+            </div>
+
+            <div class="result-section" id="result-${id}" style="display: none;"></div>
+            <div class="error" id="error-${id}" style="display: none;"></div>
+          </div>
+        `;
+      }
+
+      removeCalculator(id) {
+        const calc = this.calculators.find(c => c.id === id);
+        if (calc) {
+          calc.destroy();
+          this.calculators = this.calculators.filter(c => c.id !== id);
+          document.querySelector(`[data-calculator="${id}"]`).remove();
+        }
+      }
+
+      addCalculator() {
+        if (this.calculators.length >= this.maxCalculators) {
+          alert(`最多只能建立 ${this.maxCalculators} 個計算器`);
+          return;
+        }
+
+        const newId = Date.now();
+        this.createCalculator(newId);
+      }
+
+      bindGlobalEvents() {
+        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('addCalculator').addEventListener('click', () => this.addCalculator());
+      }
+
+      async fetchDepth(exchange, symbol) {
+        const urls = {
+          coinex: `${this.proxyUrl}https://api.coinex.com/v2/spot/depth?market=${symbol}USDT&limit=50&interval=0`,
+          pionex: `${this.proxyUrl}https://api.pionex.com/api/v1/market/depth?symbol=${symbol}_USDT&limit=500`
+        };
+
+        const response = await fetch(urls[exchange]);
+        const data = await response.json();
+
+        if (exchange === 'coinex') {
+          const depth = data?.data?.depth;
+          if (!depth?.asks?.length || !depth?.bids?.length) {
+            throw new Error('無法獲取深度資料');
+          }
+          return depth;
+        } else {
+          const depth = data?.data;
+          if (!depth?.asks?.length || !depth?.bids?.length) {
+            throw new Error('無法獲取深度資料');
+          }
+          return depth;
+        }
+      }
+
+      calculateTrade(depth, action, amount, feeRate, cetDiscount) {
+        const book = action === 'buy' ? depth.asks : depth.bids;
+        if (!book?.length) return { net: 0, slippage: 0, fee: 0 };
+
+        let remaining = amount;
+        let totalVolume = 0;
+        let weightedSum = 0;
+        let totalCost = 0;
+
+        for (const [priceStr, volumeStr] of book) {
+          const price = parseFloat(priceStr);
+          const volume = parseFloat(volumeStr);
+          
+          if (action === 'buy') {
+            const cost = price * volume;
+            if (remaining >= cost) {
+              totalVolume += volume;
+              remaining -= cost;
+              weightedSum += price * volume;
+              totalCost += cost;
+            } else {
+              const partialVolume = remaining / price;
+              totalVolume += partialVolume;
+              weightedSum += price * partialVolume;
+              totalCost += remaining;
+              break;
+            }
+          } else {
+            if (remaining >= volume) {
+              const cost = price * volume;
+              totalVolume += volume;
+              remaining -= volume;
+              weightedSum += cost;
+              totalCost += cost;
+            } else {
+              const cost = price * remaining;
+              totalVolume += remaining;
+              weightedSum += cost;
+              totalCost += cost;
+              break;
+            }
+          }
+        }
+
+        if (!totalVolume) return { net: 0, slippage: 0, fee: 0 };
+
+        const avgPrice = action === 'buy' ? weightedSum / totalVolume : weightedSum / totalVolume;
+        const bestPrice = parseFloat(book[0][0]);
+        const slippage = action === 'buy' 
+          ? ((avgPrice - bestPrice) / bestPrice) * 100
+          : ((bestPrice - avgPrice) / bestPrice) * 100;
+
+        const finalFeeRate = cetDiscount ? feeRate * 0.8 : feeRate;
+        const fee = action === 'buy' ? totalVolume * finalFeeRate : totalCost * finalFeeRate;
+        const net = action === 'buy' ? totalVolume - fee : totalCost - fee;
+
+        return { net, slippage, fee };
+      }
+    }
+
+    class Calculator {
+      constructor(id, app) {
+        this.id = id;
+        this.app = app;
+        this.interval = null;
+        this.elements = {};
+        
+        this.bindElements();
+        this.bindEvents();
+        this.updateTokenList();
+      }
+
+      bindElements() {
+        const selectors = ['exchange', 'symbol', 'amount', 'action', 'fee', 'cet', 'result', 'error'];
+        selectors.forEach(selector => {
+          this.elements[selector] = document.getElementById(`${selector}-${this.id}`);
+        });
+        this.elements.status = document.getElementById(`status-${this.id}`);
+        this.elements.tokens = document.getElementById(`tokens-${this.id}`);
+      }
+
+      bindEvents() {
+        this.elements.exchange.addEventListener('change', () => {
+          this.updateTokenList();
+          this.restartCalculation();
+        });
+
+        this.elements.symbol.addEventListener('input', () => this.restartCalculation());
+        
+        ['amount', 'action', 'fee', 'cet'].forEach(key => {
+          this.elements[key].addEventListener('change', () => this.restartCalculation());
+        });
+      }
+
+      updateTokenList() {
+        const exchange = this.elements.exchange.value;
+        const tokens = this.app.tokens[exchange] || [];
+        
+        this.elements.tokens.innerHTML = tokens
+          .map(token => `<option value="${token}"></option>`)
+          .join('');
+
+        // 更新手續費預設值
+        this.elements.fee.value = exchange === 'coinex' ? '0.3' : '0.1';
+      }
+
+      restartCalculation() {
+        if (this.interval) {
+          clearInterval(this.interval);
+          this.interval = null;
+        }
+
+        const symbol = this.elements.symbol.value.trim().toUpperCase();
+        if (!symbol) {
+          this.hideResults();
+          return;
+        }
+
+        this.startCalculation();
+        this.interval = setInterval(() => this.startCalculation(), 3000);
+      }
+
+      async startCalculation() {
+        try {
+          this.setStatus('loading');
+          
+          const depth = await this.app.fetchDepth(
+            this.elements.exchange.value,
+            this.elements.symbol.value.trim()
+          );
+
+          const result = this.app.calculateTrade(
+            depth,
+            this.elements.action.value,
+            parseFloat(this.elements.amount.value) || 0,
+            parseFloat(this.elements.fee.value) / 100 || 0,
+            this.elements.cet.checked
+          );
+
+          this.displayResult(result);
+          this.setStatus('success');
+          
+        } catch (error) {
+          this.displayError(error.message);
+          this.setStatus('error');
+        }
+      }
+
+      displayResult(result) {
+        const { net, slippage, fee } = result;
+        const action = this.elements.action.value;
+        const symbol = this.elements.symbol.value.toUpperCase();
+        
+        let slippageClass = 'slippage-low';
+        if (slippage > 5) slippageClass = 'slippage-medium';
+        if (slippage > 10) slippageClass = 'slippage-high';
+
+        const currency = action === 'buy' ? symbol : 'USDT';
+        
+        this.elements.result.innerHTML = `
+          <div class="result-item">
+            <span class="result-label">💰 實際獲得</span>
+            <span class="result-value">${net.toFixed(4)} ${currency}</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">💸 手續費</span>
+            <span class="result-value">${fee.toFixed(4)} ${currency}</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">📉 滑點</span>
+            <span class="result-value ${slippageClass}">${slippage.toFixed(2)}%</span>
+          </div>
+        `;
+
+        this.elements.result.style.display = 'block';
+        this.elements.error.style.display = 'none';
+      }
+
+      displayError(message) {
+        this.elements.error.textContent = `❌ ${message}`;
+        this.elements.error.style.display = 'block';
+        this.elements.result.style.display = 'none';
+      }
+
+      hideResults() {
+        this.elements.result.style.display = 'none';
+        this.elements.error.style.display = 'none';
+        this.setStatus('');
+      }
+
+      setStatus(status) {
+        this.elements.status.className = 'status-indicator';
+        if (status) {
+          this.elements.status.classList.add(`status-${status}`);
+        }
+      }
+
+      destroy() {
+        if (this.interval) {
+          clearInterval(this.interval);
+        }
+      }
+    }
+
+    // 初始化應用
+    const app = new ModernTradingCalculator();
+  </script>
 </body>
 </html>
