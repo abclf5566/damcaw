@@ -1,726 +1,95 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <title>📊 深度交易計算器</title>
-  
-  <style>
-    /* === CSS 變數與主題 === */
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --bg-light: #f8fafc;
-      --bg-dark: #0f172a;
-      --card-light: #ffffff;
-      --card-dark: #1e293b;
-      --text-light: #1e293b;
-      --text-dark: #f1f5f9;
-      --border-light: #e2e8f0;
-      --border-dark: #334155;
-      --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      --shadow-dark: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      --radius: 12px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>深度買賣計算器</title>
 
-    /* === 主題應用 === */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  <!-- 預防白屏 -->
+  <style>html[data-theme="dark"]{background:#121212}</style>
+  <script>
+    /* --- 在頁面尚未渲染前決定主題 --- */
+    const saved   = localStorage.getItem('prefersDark');      // 'true' | 'false' | null
+    const useDark = saved === 'true'
+          ? true
+          : saved === 'false'
+          ? false
+          : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+    if (useDark) document.documentElement.style.background = '#121212';
+  </script>
 
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg-light);
-      transition: var(--transition);
-    }
-
-    html[data-theme="dark"] {
-      background: var(--bg-dark);
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.6;
-      color: var(--text-light);
-      background: var(--bg-light);
-      padding: 16px;
-      min-height: 100vh;
-      transition: var(--transition);
-    }
-
-    html[data-theme="dark"] body {
-      color: var(--text-dark);
-      background: var(--bg-dark);
-    }
-
-    /* === 容器佈局 === */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
-
-    /* === 頁面標題 === */
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .header h1 {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      opacity: 0.8;
-      font-size: 1.1rem;
-    }
-
-    /* === 主卡片 === */
-    .calculator-card {
-      background: var(--card-light);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-light);
-      padding: 32px;
-      margin-bottom: 24px;
-      border: 1px solid var(--border-light);
-      transition: var(--transition);
-    }
-
-    html[data-theme="dark"] .calculator-card {
-      background: var(--card-dark);
-      box-shadow: var(--shadow-dark);
-      border-color: var(--border-dark);
-    }
-
-    /* === 表單網格 === */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .form-group label {
-      font-weight: 600;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid var(--border-light);
-      border-radius: 8px;
-      font-size: 16px;
-      transition: var(--transition);
-      background: var(--card-light);
-      color: var(--text-light);
-    }
-
-    html[data-theme="dark"] .form-control {
-      border-color: var(--border-dark);
-      background: var(--card-dark);
-      color: var(--text-dark);
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    /* === Checkbox 樣式 === */
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary);
-      cursor: pointer;
-    }
-
-    /* === 結果顯示 === */
-    .result-section {
-      margin-top: 24px;
-      padding: 20px;
-      border-radius: 8px;
-      background: rgba(99, 102, 241, 0.05);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      min-height: 100px;
-    }
-
-    html[data-theme="dark"] .result-section {
-      background: rgba(99, 102, 241, 0.1);
-    }
-
-    .result-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(99, 102, 241, 0.1);
-    }
-
-    .result-item:last-child {
-      border-bottom: none;
-    }
-
-    .result-label {
-      font-weight: 600;
-      opacity: 0.8;
-    }
-
-    .result-value {
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .slippage-high { color: var(--danger); }
-    .slippage-medium { color: var(--warning); }
-    .slippage-low { color: var(--success); }
-
-    /* === 錯誤訊息 === */
-    .error-message {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: var(--danger);
-      padding: 16px;
-      border-radius: 8px;
-      margin-top: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .loading {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      opacity: 0.7;
-    }
-
-    /* === 主題切換按鈕 === */
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: none;
-      background: var(--primary);
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: var(--shadow-light);
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .theme-toggle:hover {
-      background: var(--primary-dark);
-      transform: scale(1.1);
-    }
-
-    html[data-theme="dark"] .theme-toggle {
-      box-shadow: var(--shadow-dark);
-    }
-
-    /* === 響應式設計 === */
-    @media (max-width: 768px) {
-      body {
-        padding: 12px;
-      }
-
-      .calculator-card {
-        padding: 20px;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .theme-toggle {
-        top: 16px;
-        right: 16px;
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-      }
-
-      .result-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header h1 {
-        font-size: 1.6rem;
-      }
-
-      .calculator-card {
-        padding: 16px;
-      }
-    }
-
-    /* === 動畫效果 === */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .calculator-card {
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    .loading::before {
-      content: '⏳';
-      animation: spin 1s linear infinite;
-    }
-
-    /* === 狀態指示器 === */
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 8px;
-    }
-
-    .status-online { background: var(--success); }
-    .status-error { background: var(--danger); }
-    .status-loading { background: var(--warning); animation: pulse 1.5s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css?v=20250426b" />
 </head>
 
 <body>
-  <!-- 主題切換按鈕 -->
-  <button class="theme-toggle" id="themeToggle" title="切換主題">
-    🌙
-  </button>
+  <!-- ───────── 主卡片 ───────── -->
+  <div class="calculator">
+    <h2>📊 深度買賣計算器（CoinEx &amp; Pionex）</h2>
 
-  <div class="container">
-    <!-- 頁面標題 -->
-    <header class="header">
-      <h1>📊 深度交易計算器</h1>
-      <p>支援 CoinEx & Pionex 交易所的實時深度計算</p>
-    </header>
+    <!-- 深色切換 -->
+    <label for="darkToggle">
+      <input type="checkbox" id="darkToggle" />
+      🌙 深色模式
+    </label>
 
-    <!-- 主計算器 -->
-    <div class="calculator-card">
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="exchange">🏪 交易所</label>
-          <select id="exchange" class="form-control">
+    <!-- 表單列 -->
+    <div class="form-row">
+      <div>
+        <label>交易所:
+          <select id="exchange">
             <option value="coinex">CoinEx</option>
             <option value="pionex">Pionex</option>
           </select>
-        </div>
+        </label>
+      </div>
 
-        <div class="form-group">
-          <label for="symbol">🪙 交易對</label>
-          <input id="symbol" type="text" class="form-control" list="tokenList" 
-                 placeholder="輸入代幣符號 (如: BTC)" autocomplete="off">
-          <datalist id="tokenList"></datalist>
-        </div>
+      <div>
+        <label>代幣:
+          <input id="symbol" list="symbolList" autocomplete="on" />
+        </label>
+        <datalist id="symbolList"></datalist>
+      </div>
 
-        <div class="form-group">
-          <label for="amount">💰 金額 (USDT)</label>
-          <input id="amount" type="number" class="form-control" 
-                 value="1000" min="1" step="0.01">
-        </div>
+      <div>
+        <label>金額/數量:
+          <input id="amount" type="number" value="1000" />
+        </label>
+      </div>
 
-        <div class="form-group">
-          <label for="action">📈 操作類型</label>
-          <select id="action" class="form-control">
+      <div>
+        <label>操作:
+          <select id="action">
             <option value="buy">買入</option>
             <option value="sell">賣出</option>
           </select>
-        </div>
-
-        <div class="form-group">
-          <label for="fee">💸 手續費 (%)</label>
-          <input id="fee" type="number" class="form-control" 
-                 value="0.1" min="0" max="10" step="0.01">
-        </div>
-
-        <div class="form-group">
-          <div class="checkbox-group">
-            <input type="checkbox" id="cetDiscount">
-            <label for="cetDiscount">🎫 CET 折扣 (8折)</label>
-          </div>
-        </div>
+        </label>
       </div>
 
-      <!-- 結果顯示區域 -->
-      <div class="result-section" id="resultSection">
-        <div class="loading" id="loadingIndicator" style="display: none;">
-          正在獲取深度數據...
-        </div>
-        <div id="calculationResult" style="display: none;"></div>
-        <div class="error-message" id="errorMessage" style="display: none;"></div>
+      <div>
+        <label>手續費(%):
+          <input id="fee" type="number" value="0.1" />
+        </label>
+      </div>
+
+      <div>
+        <label class="row-checkbox long">
+          <input type="checkbox" id="cet" />
+          CET 折扣
+        </label>
       </div>
     </div>
+
+    <!-- 計算結果 -->
+    <div id="result"></div>
+    <div id="error"></div>
   </div>
 
-  <script>
-    (() => {
-      'use strict';
+  <!-- 新增計算器按鈕 -->
+  <button id="addCalculator">➕ 新增計算器</button>
 
-      // === 常數配置 ===
-      const CONFIG = {
-        PROXY: 'https://cors.neon-game.com/',
-        UPDATE_INTERVAL: 2000,
-        TOKENS: {
-          coinex: ['BTC', 'ETH', 'SOL', 'KAS', 'KASPER', 'KASPY', 'KDAO', 'GHOAD', 'BURT', 'KEIRO', 'KANGO', 'NACHO', 'KREX', 'KEKE'],
-          pionex: ['BTC', 'ETH', 'SOL', 'KAS', 'GHOAD', 'KANGO', 'NACHO']
-        }
-      };
-
-      // === DOM 元素 ===
-      const elements = {
-        themeToggle: document.getElementById('themeToggle'),
-        exchange: document.getElementById('exchange'),
-        symbol: document.getElementById('symbol'),
-        amount: document.getElementById('amount'),
-        action: document.getElementById('action'),
-        fee: document.getElementById('fee'),
-        cetDiscount: document.getElementById('cetDiscount'),
-        tokenList: document.getElementById('tokenList'),
-        resultSection: document.getElementById('resultSection'),
-        loadingIndicator: document.getElementById('loadingIndicator'),
-        calculationResult: document.getElementById('calculationResult'),
-        errorMessage: document.getElementById('errorMessage')
-      };
-
-      // === 狀態管理 ===
-      let updateTimer = null;
-      let isCalculating = false;
-
-      // === 主題管理 ===
-      class ThemeManager {
-        constructor() {
-          this.init();
-        }
-
-        init() {
-          const savedTheme = localStorage.getItem('theme');
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-          
-          this.setTheme(theme);
-          this.bindEvents();
-        }
-
-        setTheme(theme) {
-          document.documentElement.setAttribute('data-theme', theme);
-          elements.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-          localStorage.setItem('theme', theme);
-        }
-
-        toggle() {
-          const currentTheme = document.documentElement.getAttribute('data-theme');
-          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-          this.setTheme(newTheme);
-        }
-
-        bindEvents() {
-          elements.themeToggle.addEventListener('click', () => this.toggle());
-        }
-      }
-
-      // === API 管理 ===
-      class APIManager {
-        async fetchDepth(exchange, symbol) {
-          const urls = {
-            coinex: `${CONFIG.PROXY}https://api.coinex.com/v2/spot/depth?market=${symbol}USDT&limit=50&interval=0`,
-            pionex: `${CONFIG.PROXY}https://api.pionex.com/api/v1/market/depth?symbol=${symbol}_USDT&limit=500`
-          };
-
-          try {
-            const response = await fetch(urls[exchange]);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
-            return this.normalizeDepthData(exchange, data);
-          } catch (error) {
-            throw new Error(`API 請求失敗: ${error.message}`);
-          }
-        }
-
-        normalizeDepthData(exchange, data) {
-          if (exchange === 'coinex') {
-            const depth = data?.data?.depth;
-            if (!depth?.asks?.length || !depth?.bids?.length) {
-              throw new Error('CoinEx 深度數據無效');
-            }
-            return depth;
-          } else {
-            const depth = data?.data;
-            if (!depth?.asks?.length || !depth?.bids?.length) {
-              throw new Error('Pionex 深度數據無效');
-            }
-            return depth;
-          }
-        }
-      }
-
-      // === 計算器 ===
-      class Calculator {
-        constructor() {
-          this.apiManager = new APIManager();
-        }
-
-        calculate({ depth, action, amount, feeRate, cetDiscount }) {
-          const orderBook = action === 'buy' ? depth.asks : depth.bids;
-          if (!orderBook?.length) return { net: 0, slippage: 0, fee: 0 };
-
-          let remaining = amount;
-          let totalQuantity = 0;
-          let weightedSum = 0;
-          let volume = 0;
-
-          for (const [priceStr, volumeStr] of orderBook) {
-            const price = parseFloat(priceStr);
-            const orderVolume = parseFloat(volumeStr);
-            const orderCost = price * orderVolume;
-
-            if (action === 'buy') {
-              if (remaining >= orderCost) {
-                totalQuantity += orderVolume;
-                remaining -= orderCost;
-                weightedSum += price * orderVolume;
-                volume += orderVolume;
-              } else {
-                const partialVolume = remaining / price;
-                totalQuantity += partialVolume;
-                weightedSum += price * partialVolume;
-                volume += partialVolume;
-                break;
-              }
-            } else {
-              if (remaining >= orderVolume) {
-                totalQuantity += price * orderVolume;
-                remaining -= orderVolume;
-                weightedSum += price * orderVolume;
-                volume += orderVolume;
-              } else {
-                totalQuantity += price * remaining;
-                weightedSum += price * remaining;
-                volume += remaining;
-                break;
-              }
-            }
-          }
-
-          if (!volume) return { net: 0, slippage: 0, fee: 0 };
-
-          const avgPrice = weightedSum / volume;
-          const bestPrice = parseFloat(orderBook[0][0]);
-          const slippage = (action === 'buy' ? 
-            (avgPrice - bestPrice) / bestPrice : 
-            (bestPrice - avgPrice) / bestPrice) * 100;
-
-          const actualFeeRate = cetDiscount ? feeRate * 0.8 : feeRate;
-          const fee = totalQuantity * actualFeeRate;
-          const net = totalQuantity - fee;
-
-          return { net, slippage, fee };
-        }
-      }
-
-      // === UI 管理 ===
-      class UIManager {
-        constructor(calculator) {
-          this.calculator = calculator;
-          this.init();
-        }
-
-        init() {
-          this.updateTokenList();
-          this.updateFeeRate();
-          this.bindEvents();
-          this.startCalculation();
-        }
-
-        updateTokenList() {
-          const exchange = elements.exchange.value;
-          const tokens = CONFIG.TOKENS[exchange];
-          elements.tokenList.innerHTML = tokens
-            .map(token => `<option value="${token}"></option>`)
-            .join('');
-        }
-
-        updateFeeRate() {
-          const exchange = elements.exchange.value;
-          elements.fee.value = exchange === 'coinex' ? '0.3' : '0.1';
-        }
-
-        bindEvents() {
-          elements.exchange.addEventListener('change', () => {
-            this.updateTokenList();
-            this.updateFeeRate();
-            this.restartCalculation();
-          });
-
-          elements.symbol.addEventListener('input', () => {
-            this.restartCalculation();
-          });
-
-          [elements.amount, elements.action, elements.fee, elements.cetDiscount].forEach(el => {
-            el.addEventListener('change', () => this.restartCalculation());
-          });
-        }
-
-        showLoading() {
-          elements.loadingIndicator.style.display = 'flex';
-          elements.calculationResult.style.display = 'none';
-          elements.errorMessage.style.display = 'none';
-        }
-
-        showResult(result, symbol, action) {
-          const currency = action === 'buy' ? symbol.toUpperCase() : 'USDT';
-          const slippageClass = result.slippage > 10 ? 'slippage-high' : 
-                               result.slippage > 5 ? 'slippage-medium' : 'slippage-low';
-
-          elements.calculationResult.innerHTML = `
-            <div class="result-item">
-              <span class="result-label">💰 獲得數量 (扣除手續費)</span>
-              <span class="result-value">${result.net.toFixed(6)} ${currency}</span>
-            </div>
-            <div class="result-item">
-              <span class="result-label">💸 手續費</span>
-              <span class="result-value">${result.fee.toFixed(6)} ${currency}</span>
-            </div>
-            <div class="result-item">
-              <span class="result-label">📉 滑點</span>
-              <span class="result-value ${slippageClass}">${result.slippage.toFixed(2)}%</span>
-            </div>
-          `;
-
-          elements.loadingIndicator.style.display = 'none';
-          elements.calculationResult.style.display = 'block';
-          elements.errorMessage.style.display = 'none';
-        }
-
-        showError(message) {
-          elements.errorMessage.innerHTML = `
-            <span class="status-dot status-error"></span>
-            ${message}
-          `;
-          elements.loadingIndicator.style.display = 'none';
-          elements.calculationResult.style.display = 'none';
-          elements.errorMessage.style.display = 'flex';
-        }
-
-        async performCalculation() {
-          const symbol = elements.symbol.value.trim().toUpperCase();
-          if (!symbol) {
-            elements.loadingIndicator.style.display = 'none';
-            elements.calculationResult.style.display = 'none';
-            elements.errorMessage.style.display = 'none';
-            return;
-          }
-
-          if (isCalculating) return;
-          isCalculating = true;
-
-          try {
-            this.showLoading();
-
-            const depth = await this.calculator.apiManager.fetchDepth(
-              elements.exchange.value,
-              symbol
-            );
-
-            const result = this.calculator.calculate({
-              depth,
-              action: elements.action.value,
-              amount: parseFloat(elements.amount.value) || 0,
-              feeRate: parseFloat(elements.fee.value) / 100 || 0,
-              cetDiscount: elements.cetDiscount.checked
-            });
-
-            this.showResult(result, symbol, elements.action.value);
-          } catch (error) {
-            this.showError(error.message);
-          } finally {
-            isCalculating = false;
-          }
-        }
-
-        startCalculation() {
-          this.performCalculation();
-          updateTimer = setInterval(() => {
-            this.performCalculation();
-          }, CONFIG.UPDATE_INTERVAL);
-        }
-
-        restartCalculation() {
-          if (updateTimer) {
-            clearInterval(updateTimer);
-          }
-          this.startCalculation();
-        }
-      }
-
-      // === 應用初始化 ===
-      document.addEventListener('DOMContentLoaded', () => {
-        new ThemeManager();
-        const calculator = new Calculator();
-        new UIManager(calculator);
-
-        // 頁面卸載時清理定時器
-        window.addEventListener('beforeunload', () => {
-          if (updateTimer) {
-            clearInterval(updateTimer);
-          }
-        });
-      });
-
-    })();
-  </script>
+  <!-- 功能腳本 -->
+  <script type="module" src="app.js?v=20250426b"></script>
 </body>
 </html>
