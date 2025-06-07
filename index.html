@@ -344,487 +344,496 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle">🌙</button>
-
-  <div class="container">
-    <header class="header">
-      <h1>📊 深度交易計算器</h1>
-      <p>實時計算 CoinEx & Pionex 交易滑點與手續費</p>
-    </header>
-
-    <div class="calculators-grid" id="calculatorsGrid">
-      <div class="calculator" data-calculator="0">
-        <div class="status-indicator" id="status-0"></div>
-        
-        <div class="form-grid">
-          <div class="form-group">
-            <label>交易所</label>
-            <select id="exchange-0">
-              <option value="coinex">CoinEx</option>
-              <option value="pionex">Pionex</option>
-            </select>
-          </div>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+  
+    <div class="container">
+      <header class="header">
+        <h1>深度交易計算器</h1>
+        <p>實時計算 CoinEx & Pionex 交易滑點與手續費</p>
+      </header>
+  
+      <div class="calculators-grid" id="calculatorsGrid">
+        <div class="calculator" data-calculator="0">
+          <div class="status-indicator" id="status-0"></div>
           
-          <div class="form-group">
-            <label>代幣</label>
-            <input id="symbol-0" list="tokens-0" placeholder="輸入代幣符號">
-            <datalist id="tokens-0"></datalist>
-          </div>
-          
-          <div class="form-group">
-            <label>金額 (USDT)</label>
-            <input id="amount-0" type="number" value="1000" min="0" step="0.01">
-          </div>
-          
-          <div class="form-group">
-            <label>操作</label>
-            <select id="action-0">
-              <option value="buy">買入</option>
-              <option value="sell">賣出</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>手續費 (%)</label>
-            <input id="fee-0" type="number" value="0.1" min="0" max="10" step="0.01">
-          </div>
-        </div>
-
-        <div class="checkbox-group">
-          <input type="checkbox" id="cet-0">
-          <label for="cet-0">CET 8折優惠</label>
-        </div>
-
-        <div class="result-section" id="result-0" style="display: none;"></div>
-        <div class="error" id="error-0" style="display: none;"></div>
-      </div>
-    </div>
-
-    <button class="add-calculator" id="addCalculator">➕ 新增計算器</button>
-  </div>
-
-  <script>
-    class ModernTradingCalculator {
-      constructor() {
-        this.calculators = [];
-        this.maxCalculators = 8;
-        this.proxyUrl = 'https://cors.neon-game.com/';
-        this.tokens = {
-          coinex: ['KASPER','KASPY','KDAO','GHOAD','BURT','KEIRO','KANGO','NACHO','KREX','KEKE','BTC','ETH','SOL','KAS'],
-          pionex: ['GHOAD','KANGO','NACHO','KAS','BTC','ETH','SOL']
-        };
-        
-        this.init();
-      }
-
-      init() {
-        this.initTheme();
-        this.createCalculator(0);
-        this.bindGlobalEvents();
-        this.loadSavedConfig();
-      }
-
-      initTheme() {
-        const saved = localStorage.getItem('theme');
-        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        this.setTheme(theme);
-      }
-
-      setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-        localStorage.setItem('theme', theme);
-      }
-
-      toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        this.setTheme(newTheme);
-      }
-
-      createCalculator(id) {
-        if (id === 0) {
-          this.calculators.push(new Calculator(id, this));
-          return;
-        }
-
-        const grid = document.getElementById('calculatorsGrid');
-        const template = this.getCalculatorTemplate(id);
-        grid.insertAdjacentHTML('beforeend', template);
-        this.calculators.push(new Calculator(id, this));
-      }
-
-      getCalculatorTemplate(id) {
-        return `
-          <div class="calculator" data-calculator="${id}">
-            <div class="status-indicator" id="status-${id}"></div>
-            <button class="delete-btn" onclick="app.removeCalculator(${id})">🗑️ 刪除</button>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>交易所</label>
+              <select id="exchange-0">
+                <option value="coinex">CoinEx</option>
+                <option value="pionex">Pionex</option>
+              </select>
+            </div>
             
-            <div class="form-grid">
-              <div class="form-group">
-                <label>交易所</label>
-                <select id="exchange-${id}">
-                  <option value="coinex">CoinEx</option>
-                  <option value="pionex">Pionex</option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label>代幣</label>
-                <input id="symbol-${id}" list="tokens-${id}" placeholder="輸入代幣符號">
-                <datalist id="tokens-${id}"></datalist>
-              </div>
-              
-              <div class="form-group">
-                <label>金額 (USDT)</label>
-                <input id="amount-${id}" type="number" value="1000" min="0" step="0.01">
-              </div>
-              
-              <div class="form-group">
-                <label>操作</label>
-                <select id="action-${id}">
-                  <option value="buy">買入</option>
-                  <option value="sell">賣出</option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label>手續費 (%)</label>
-                <input id="fee-${id}" type="number" value="0.1" min="0" max="10" step="0.01">
-              </div>
+            <div class="form-group">
+              <label>代幣</label>
+              <input id="symbol-0" list="tokens-0" placeholder="輸入代幣符號">
+              <datalist id="tokens-0"></datalist>
             </div>
-
-            <div class="checkbox-group">
-              <input type="checkbox" id="cet-${id}">
-              <label for="cet-${id}">CET 8折優惠</label>
+            
+            <div class="form-group">
+              <label>金額 (USDT)</label>
+              <input id="amount-0" type="number" value="1000" min="0" step="0.01">
             </div>
-
-            <div class="result-section" id="result-${id}" style="display: none;"></div>
-            <div class="error" id="error-${id}" style="display: none;"></div>
+            
+            <div class="form-group">
+              <label>操作</label>
+              <select id="action-0">
+                <option value="buy">買入</option>
+                <option value="sell">賣出</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>手續費 (%)</label>
+              <input id="fee-0" type="number" value="0.1" min="0" max="10" step="0.01">
+            </div>
           </div>
-        `;
-      }
-
-      removeCalculator(id) {
-        const calc = this.calculators.find(c => c.id === id);
-        if (calc) {
-          calc.destroy();
-          this.calculators = this.calculators.filter(c => c.id !== id);
-          document.querySelector(`[data-calculator="${id}"]`).remove();
+  
+          <div class="checkbox-group">
+            <input type="checkbox" id="cet-0">
+            <label for="cet-0">CET 8折優惠</label>
+          </div>
+  
+          <div class="result-section" id="result-0" style="display: none;"></div>
+          <div class="error" id="error-0" style="display: none;"></div>
+        </div>
+      </div>
+  
+      <button class="add-calculator" id="addCalculator">➕ 新增計算器</button>
+    </div>
+  
+    <script>
+      class ModernTradingCalculator {
+        constructor() {
+          this.calculators = [];
+          this.maxCalculators = 8;
+          this.proxyUrl = 'https://cors.neon-game.com/';
+          this.tokens = {
+            coinex: ['KASPER','KASPY','KDAO','GHOAD','BURT','KEIRO','KANGO','NACHO','KREX','KEKE','BTC','ETH','SOL','KAS'],
+            pionex: ['GHOAD','KANGO','NACHO','KAS','BTC','ETH','SOL','NXPC']
+          };
+          
+          this.init();
+        }
+  
+        init() {
+          this.initTheme();
+          this.createCalculator(0);
+          this.bindGlobalEvents();
+          this.loadSavedConfig();
+        }
+  
+        initTheme() {
+          const saved = localStorage.getItem('theme');
+          const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          this.setTheme(theme);
+        }
+  
+        setTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+          localStorage.setItem('theme', theme);
+        }
+  
+        toggleTheme() {
+          const current = document.documentElement.getAttribute('data-theme');
+          const newTheme = current === 'dark' ? 'light' : 'dark';
+          this.setTheme(newTheme);
+        }
+  
+        createCalculator(id) {
+          if (id === 0) {
+            this.calculators.push(new Calculator(id, this));
+            return;
+          }
+  
+          const grid = document.getElementById('calculatorsGrid');
+          const template = this.getCalculatorTemplate(id);
+          grid.insertAdjacentHTML('beforeend', template);
+          this.calculators.push(new Calculator(id, this));
+        }
+  
+        getCalculatorTemplate(id) {
+          return `
+            <div class="calculator" data-calculator="${id}">
+              <div class="status-indicator" id="status-${id}"></div>
+              <button class="delete-btn" onclick="app.removeCalculator(${id})">🗑️ 刪除</button>
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>交易所</label>
+                  <select id="exchange-${id}">
+                    <option value="coinex">CoinEx</option>
+                    <option value="pionex">Pionex</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>代幣</label>
+                  <input id="symbol-${id}" list="tokens-${id}" placeholder="輸入代幣符號">
+                  <datalist id="tokens-${id}"></datalist>
+                </div>
+                
+                <div class="form-group">
+                  <label>金額 (USDT)</label>
+                  <input id="amount-${id}" type="number" value="1000" min="0" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                  <label>操作</label>
+                  <select id="action-${id}">
+                    <option value="buy">買入</option>
+                    <option value="sell">賣出</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>手續費 (%)</label>
+                  <input id="fee-${id}" type="number" value="0.1" min="0" max="10" step="0.01">
+                </div>
+              </div>
+  
+              <div class="checkbox-group">
+                <input type="checkbox" id="cet-${id}">
+                <label for="cet-${id}">CET 8折優惠</label>
+              </div>
+  
+              <div class="result-section" id="result-${id}" style="display: none;"></div>
+              <div class="error" id="error-${id}" style="display: none;"></div>
+            </div>
+          `;
+        }
+  
+        removeCalculator(id) {
+          const calc = this.calculators.find(c => c.id === id);
+          if (calc) {
+            calc.destroy();
+            this.calculators = this.calculators.filter(c => c.id !== id);
+            document.querySelector(`[data-calculator="${id}"]`).remove();
+            this.saveConfig();
+          }
+        }
+  
+        addCalculator() {
+          if (this.calculators.length >= this.maxCalculators) {
+            alert(`最多只能建立 ${this.maxCalculators} 個計算器`);
+            return;
+          }
+  
+          const newId = Date.now();
+          this.createCalculator(newId);
           this.saveConfig();
         }
-      }
-
-      addCalculator() {
-        if (this.calculators.length >= this.maxCalculators) {
-          alert(`最多只能建立 ${this.maxCalculators} 個計算器`);
-          return;
+  
+        saveConfig() {
+          const config = {
+            calculators: this.calculators.map(calc => ({
+              id: calc.id,
+              exchange: calc.elements.exchange.value,
+              symbol: calc.elements.symbol.value,
+              amount: calc.elements.amount.value,
+              action: calc.elements.action.value,
+              fee: calc.elements.fee.value,
+              cet: calc.elements.cet.checked
+            }))
+          };
+          localStorage.setItem('calculatorConfig', JSON.stringify(config));
         }
-
-        const newId = Date.now();
-        this.createCalculator(newId);
-        this.saveConfig();
-      }
-
-      saveConfig() {
-        const config = {
-          calculators: this.calculators.map(calc => ({
-            id: calc.id,
-            exchange: calc.elements.exchange.value,
-            symbol: calc.elements.symbol.value,
-            amount: calc.elements.amount.value,
-            action: calc.elements.action.value,
-            fee: calc.elements.fee.value,
-            cet: calc.elements.cet.checked
-          }))
-        };
-        localStorage.setItem('calculatorConfig', JSON.stringify(config));
-      }
-
-      loadSavedConfig() {
-        try {
-          const saved = localStorage.getItem('calculatorConfig');
-          if (!saved) return;
-
-          const config = JSON.parse(saved);
-          if (!config.calculators || !Array.isArray(config.calculators)) return;
-
-          // 載入第一個計算器的配置
-          if (config.calculators[0]) {
-            this.calculators[0].loadConfig(config.calculators[0]);
-          }
-
-          // 創建其他計算器
-          for (let i = 1; i < config.calculators.length; i++) {
-            const calcConfig = config.calculators[i];
-            this.createCalculator(calcConfig.id);
-            // 等待DOM更新後載入配置
-            setTimeout(() => {
-              const calc = this.calculators.find(c => c.id === calcConfig.id);
-              if (calc) calc.loadConfig(calcConfig);
-            }, 100);
-          }
-        } catch (error) {
-          console.warn('載入配置失敗:', error);
-        }
-      }
-
-      bindGlobalEvents() {
-        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
-        document.getElementById('addCalculator').addEventListener('click', () => this.addCalculator());
-      }
-
-      async fetchDepth(exchange, symbol) {
-        const urls = {
-          coinex: `${this.proxyUrl}https://api.coinex.com/v2/spot/depth?market=${symbol}USDT&limit=50&interval=0`,
-          pionex: `${this.proxyUrl}https://api.pionex.com/api/v1/market/depth?symbol=${symbol}_USDT&limit=500`
-        };
-
-        const response = await fetch(urls[exchange]);
-        const data = await response.json();
-
-        if (exchange === 'coinex') {
-          const depth = data?.data?.depth;
-          if (!depth?.asks?.length || !depth?.bids?.length) {
-            throw new Error('無法獲取深度資料');
-          }
-          return depth;
-        } else {
-          const depth = data?.data;
-          if (!depth?.asks?.length || !depth?.bids?.length) {
-            throw new Error('無法獲取深度資料');
-          }
-          return depth;
-        }
-      }
-
-      calculateTrade(depth, action, amount, feeRate, cetDiscount) {
-        const book = action === 'buy' ? depth.asks : depth.bids;
-        if (!book?.length) return { net: 0, slippage: 0, fee: 0 };
-
-        let remaining = amount;
-        let totalVolume = 0;
-        let weightedSum = 0;
-        let totalCost = 0;
-
-        for (const [priceStr, volumeStr] of book) {
-          const price = parseFloat(priceStr);
-          const volume = parseFloat(volumeStr);
-          
-          if (action === 'buy') {
-            const cost = price * volume;
-            if (remaining >= cost) {
-              totalVolume += volume;
-              remaining -= cost;
-              weightedSum += price * volume;
-              totalCost += cost;
-            } else {
-              const partialVolume = remaining / price;
-              totalVolume += partialVolume;
-              weightedSum += price * partialVolume;
-              totalCost += remaining;
-              break;
+  
+        loadSavedConfig() {
+          try {
+            const saved = localStorage.getItem('calculatorConfig');
+            if (!saved) return;
+  
+            const config = JSON.parse(saved);
+            if (!config.calculators || !Array.isArray(config.calculators)) return;
+  
+            // 載入第一個計算器的配置
+            if (config.calculators[0]) {
+              this.calculators[0].loadConfig(config.calculators[0]);
             }
+  
+            // 創建其他計算器
+            for (let i = 1; i < config.calculators.length; i++) {
+              const calcConfig = config.calculators[i];
+              this.createCalculator(calcConfig.id);
+              // 等待DOM更新後載入配置
+              setTimeout(() => {
+                const calc = this.calculators.find(c => c.id === calcConfig.id);
+                if (calc) calc.loadConfig(calcConfig);
+              }, 100);
+            }
+          } catch (error) {
+            console.warn('載入配置失敗:', error);
+          }
+        }
+  
+        bindGlobalEvents() {
+          document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+          document.getElementById('addCalculator').addEventListener('click', () => this.addCalculator());
+        }
+  
+        // 檢查 token 是否在支援列表中
+        isTokenSupported(exchange, symbol) {
+          const upperSymbol = symbol.toUpperCase();
+          return this.tokens[exchange].includes(upperSymbol);
+        }
+  
+        async fetchDepth(exchange, symbol) {
+          // 統一轉換為大寫
+          const upperSymbol = symbol.toUpperCase();
+  
+          const urls = {
+            coinex: `${this.proxyUrl}https://api.coinex.com/v2/spot/depth?market=${upperSymbol}USDT&limit=50&interval=0`,
+            pionex: `${this.proxyUrl}https://api.pionex.com/api/v1/market/depth?symbol=${upperSymbol}_USDT&limit=500`
+          };
+  
+          const response = await fetch(urls[exchange]);
+          const data = await response.json();
+  
+          if (exchange === 'coinex') {
+            const depth = data?.data?.depth;
+            if (!depth?.asks?.length || !depth?.bids?.length) {
+              throw new Error('無法獲取深度資料');
+            }
+            return depth;
           } else {
-            if (remaining >= volume) {
-              const cost = price * volume;
-              totalVolume += volume;
-              remaining -= volume;
-              weightedSum += cost;
-              totalCost += cost;
-            } else {
-              const cost = price * remaining;
-              totalVolume += remaining;
-              weightedSum += cost;
-              totalCost += cost;
-              break;
+            const depth = data?.data;
+            if (!depth?.asks?.length || !depth?.bids?.length) {
+              throw new Error('無法獲取深度資料');
             }
+            return depth;
           }
         }
-
-        if (!totalVolume) return { net: 0, slippage: 0, fee: 0 };
-
-        const avgPrice = action === 'buy' ? weightedSum / totalVolume : weightedSum / totalVolume;
-        const bestPrice = parseFloat(book[0][0]);
-        const slippage = action === 'buy' 
-          ? ((avgPrice - bestPrice) / bestPrice) * 100
-          : ((bestPrice - avgPrice) / bestPrice) * 100;
-
-        const finalFeeRate = cetDiscount ? feeRate * 0.8 : feeRate;
-        const fee = action === 'buy' ? totalVolume * finalFeeRate : totalCost * finalFeeRate;
-        const net = action === 'buy' ? totalVolume - fee : totalCost - fee;
-
-        return { net, slippage, fee };
+  
+        calculateTrade(depth, action, amount, feeRate, cetDiscount) {
+          const book = action === 'buy' ? depth.asks : depth.bids;
+          if (!book?.length) return { net: 0, slippage: 0, fee: 0 };
+  
+          let remaining = amount;
+          let totalVolume = 0;
+          let weightedSum = 0;
+          let totalCost = 0;
+  
+          for (const [priceStr, volumeStr] of book) {
+            const price = parseFloat(priceStr);
+            const volume = parseFloat(volumeStr);
+            
+            if (action === 'buy') {
+              const cost = price * volume;
+              if (remaining >= cost) {
+                totalVolume += volume;
+                remaining -= cost;
+                weightedSum += price * volume;
+                totalCost += cost;
+              } else {
+                const partialVolume = remaining / price;
+                totalVolume += partialVolume;
+                weightedSum += price * partialVolume;
+                totalCost += remaining;
+                break;
+              }
+            } else {
+              if (remaining >= volume) {
+                const cost = price * volume;
+                totalVolume += volume;
+                remaining -= volume;
+                weightedSum += cost;
+                totalCost += cost;
+              } else {
+                const cost = price * remaining;
+                totalVolume += remaining;
+                weightedSum += cost;
+                totalCost += cost;
+                break;
+              }
+            }
+          }
+  
+          if (!totalVolume) return { net: 0, slippage: 0, fee: 0 };
+  
+          const avgPrice = action === 'buy' ? weightedSum / totalVolume : weightedSum / totalVolume;
+          const bestPrice = parseFloat(book[0][0]);
+          const slippage = action === 'buy' 
+            ? ((avgPrice - bestPrice) / bestPrice) * 100
+            : ((bestPrice - avgPrice) / bestPrice) * 100;
+  
+          const finalFeeRate = cetDiscount ? feeRate * 0.8 : feeRate;
+          const fee = action === 'buy' ? totalVolume * finalFeeRate : totalCost * finalFeeRate;
+          const net = action === 'buy' ? totalVolume - fee : totalCost - fee;
+  
+          return { net, slippage, fee };
+        }
       }
-    }
-
-    class Calculator {
-      constructor(id, app) {
-        this.id = id;
-        this.app = app;
-        this.interval = null;
-        this.elements = {};
-        
-        this.bindElements();
-        this.bindEvents();
-        this.updateTokenList();
-      }
-
-      bindElements() {
-        const selectors = ['exchange', 'symbol', 'amount', 'action', 'fee', 'cet', 'result', 'error'];
-        selectors.forEach(selector => {
-          this.elements[selector] = document.getElementById(`${selector}-${this.id}`);
-        });
-        this.elements.status = document.getElementById(`status-${this.id}`);
-        this.elements.tokens = document.getElementById(`tokens-${this.id}`);
-      }
-
-      bindEvents() {
-        this.elements.exchange.addEventListener('change', () => {
+  
+      class Calculator {
+        constructor(id, app) {
+          this.id = id;
+          this.app = app;
+          this.interval = null;
+          this.elements = {};
+          
+          this.bindElements();
+          this.bindEvents();
           this.updateTokenList();
-          this.restartCalculation();
-          this.app.saveConfig();
-        });
-
-        this.elements.symbol.addEventListener('input', () => {
-          this.restartCalculation();
-          this.app.saveConfig();
-        });
-        
-        ['amount', 'action', 'fee', 'cet'].forEach(key => {
-          this.elements[key].addEventListener('change', () => {
+        }
+  
+        bindElements() {
+          const selectors = ['exchange', 'symbol', 'amount', 'action', 'fee', 'cet', 'result', 'error'];
+          selectors.forEach(selector => {
+            this.elements[selector] = document.getElementById(`${selector}-${this.id}`);
+          });
+          this.elements.status = document.getElementById(`status-${this.id}`);
+          this.elements.tokens = document.getElementById(`tokens-${this.id}`);
+        }
+  
+        bindEvents() {
+          this.elements.exchange.addEventListener('change', () => {
+            this.updateTokenList();
             this.restartCalculation();
             this.app.saveConfig();
           });
-        });
-      }
-
-      updateTokenList() {
-        const exchange = this.elements.exchange.value;
-        const tokens = this.app.tokens[exchange] || [];
-        
-        this.elements.tokens.innerHTML = tokens
-          .map(token => `<option value="${token}"></option>`)
-          .join('');
-
-        // 更新手續費預設值
-        this.elements.fee.value = exchange === 'coinex' ? '0.3' : '0.1';
-      }
-
-      restartCalculation() {
-        if (this.interval) {
-          clearInterval(this.interval);
-          this.interval = null;
-        }
-
-        const symbol = this.elements.symbol.value.trim().toUpperCase();
-        if (!symbol) {
-          this.hideResults();
-          return;
-        }
-
-        this.startCalculation();
-        this.interval = setInterval(() => this.startCalculation(), 3000);
-      }
-
-      async startCalculation() {
-        try {
-          this.setStatus('loading');
+  
+          this.elements.symbol.addEventListener('input', () => {
+            this.restartCalculation();
+            this.app.saveConfig();
+          });
           
-          const depth = await this.app.fetchDepth(
-            this.elements.exchange.value,
-            this.elements.symbol.value.trim()
-          );
-
-          const result = this.app.calculateTrade(
-            depth,
-            this.elements.action.value,
-            parseFloat(this.elements.amount.value) || 0,
-            parseFloat(this.elements.fee.value) / 100 || 0,
-            this.elements.cet.checked
-          );
-
-          this.displayResult(result);
-          this.setStatus('success');
+          ['amount', 'action', 'fee', 'cet'].forEach(key => {
+            this.elements[key].addEventListener('change', () => {
+              this.restartCalculation();
+              this.app.saveConfig();
+            });
+          });
+        }
+  
+        updateTokenList() {
+          const exchange = this.elements.exchange.value;
+          const tokens = this.app.tokens[exchange] || [];
           
-        } catch (error) {
-          this.displayError(error.message);
-          this.setStatus('error');
+          this.elements.tokens.innerHTML = tokens
+            .map(token => `<option value="${token}"></option>`)
+            .join('');
+  
+          // 更新手續費預設值
+          this.elements.fee.value = exchange === 'coinex' ? '0.3' : '0.1';
+        }
+  
+        restartCalculation() {
+          if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+          }
+  
+          const symbol = this.elements.symbol.value.trim().toUpperCase();
+          if (!symbol) {
+            this.hideResults();
+            return;
+          }
+  
+          this.startCalculation();
+          this.interval = setInterval(() => this.startCalculation(), 3000);
+        }
+  
+        async startCalculation() {
+          try {
+            this.setStatus('loading');
+            
+            const depth = await this.app.fetchDepth(
+              this.elements.exchange.value,
+              this.elements.symbol.value.trim()
+            );
+  
+            const result = this.app.calculateTrade(
+              depth,
+              this.elements.action.value,
+              parseFloat(this.elements.amount.value) || 0,
+              parseFloat(this.elements.fee.value) / 100 || 0,
+              this.elements.cet.checked
+            );
+  
+            this.displayResult(result);
+            this.setStatus('success');
+            
+          } catch (error) {
+            this.displayError(error.message);
+            this.setStatus('error');
+          }
+        }
+  
+        displayResult(result) {
+          const { net, slippage, fee } = result;
+          const action = this.elements.action.value;
+          const symbol = this.elements.symbol.value.toUpperCase();
+          
+          let slippageClass = 'slippage-low';
+          if (slippage > 5) slippageClass = 'slippage-medium';
+          if (slippage > 10) slippageClass = 'slippage-high';
+  
+          const currency = action === 'buy' ? symbol : 'USDT';
+          
+          this.elements.result.innerHTML = `
+            <div class="result-item">
+              <span class="result-label">💰 實際獲得</span>
+              <span class="result-value">${net.toFixed(4)} ${currency}</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">💸 手續費</span>
+              <span class="result-value">${fee.toFixed(4)} ${currency}</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">📉 滑點</span>
+              <span class="result-value ${slippageClass}">${slippage.toFixed(2)}%</span>
+            </div>
+          `;
+  
+          this.elements.result.style.display = 'block';
+          this.elements.error.style.display = 'none';
+        }
+  
+        displayError(message) {
+          this.elements.error.textContent = `❌ ${message}`;
+          this.elements.error.style.display = 'block';
+          this.elements.result.style.display = 'none';
+        }
+  
+        hideResults() {
+          this.elements.result.style.display = 'none';
+          this.elements.error.style.display = 'none';
+          this.setStatus('');
+        }
+  
+        setStatus(status) {
+          this.elements.status.className = 'status-indicator';
+          if (status) {
+            this.elements.status.classList.add(`status-${status}`);
+          }
+        }
+  
+        loadConfig(config) {
+          this.elements.exchange.value = config.exchange || 'coinex';
+          this.updateTokenList();
+          this.elements.symbol.value = config.symbol || '';
+          this.elements.amount.value = config.amount || '1000';
+          this.elements.action.value = config.action || 'buy';
+          this.elements.fee.value = config.fee || '0.1';
+          this.elements.cet.checked = config.cet || false;
+          
+          if (config.symbol) {
+            this.restartCalculation();
+          }
+        }
+  
+        destroy() {
+          if (this.interval) {
+            clearInterval(this.interval);
+          }
         }
       }
-
-      displayResult(result) {
-        const { net, slippage, fee } = result;
-        const action = this.elements.action.value;
-        const symbol = this.elements.symbol.value.toUpperCase();
-        
-        let slippageClass = 'slippage-low';
-        if (slippage > 5) slippageClass = 'slippage-medium';
-        if (slippage > 10) slippageClass = 'slippage-high';
-
-        const currency = action === 'buy' ? symbol : 'USDT';
-        
-        this.elements.result.innerHTML = `
-          <div class="result-item">
-            <span class="result-label">💰 實際獲得</span>
-            <span class="result-value">${net.toFixed(4)} ${currency}</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">💸 手續費</span>
-            <span class="result-value">${fee.toFixed(4)} ${currency}</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">📉 滑點</span>
-            <span class="result-value ${slippageClass}">${slippage.toFixed(2)}%</span>
-          </div>
-        `;
-
-        this.elements.result.style.display = 'block';
-        this.elements.error.style.display = 'none';
-      }
-
-      displayError(message) {
-        this.elements.error.textContent = `❌ ${message}`;
-        this.elements.error.style.display = 'block';
-        this.elements.result.style.display = 'none';
-      }
-
-      hideResults() {
-        this.elements.result.style.display = 'none';
-        this.elements.error.style.display = 'none';
-        this.setStatus('');
-      }
-
-      setStatus(status) {
-        this.elements.status.className = 'status-indicator';
-        if (status) {
-          this.elements.status.classList.add(`status-${status}`);
-        }
-      }
-
-      loadConfig(config) {
-        this.elements.exchange.value = config.exchange || 'coinex';
-        this.updateTokenList();
-        this.elements.symbol.value = config.symbol || '';
-        this.elements.amount.value = config.amount || '1000';
-        this.elements.action.value = config.action || 'buy';
-        this.elements.fee.value = config.fee || '0.1';
-        this.elements.cet.checked = config.cet || false;
-        
-        if (config.symbol) {
-          this.restartCalculation();
-        }
-      }
-
-      destroy() {
-        if (this.interval) {
-          clearInterval(this.interval);
-        }
-      }
-    }
-
-    // 初始化應用
-    const app = new ModernTradingCalculator();
-  </script>
-</body>
-</html>
+  
+      // 初始化應用
+      const app = new ModernTradingCalculator();
+    </script>
+  </body>
+  </html>
